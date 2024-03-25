@@ -93,10 +93,11 @@ AliasResult AliasAnalysis::alias(Value lhs, Value rhs) {
   }
 
   // SourceKind::Direct is set for the addresses wrapped in a box, perhaps from
-  // a global, alloca, or argument.
+  // a global, alloca, argument, or component.
   // e.g.: fir.global @_QMpointersEp : !fir.box<!fir.ptr<f32>>
   // e.g.: %0 = fir.alloca !fir.box<!fir.ptr<f32>>
   // e.g.: %arg0: !fir.ref<!fir.box<!fir.ptr<f32>>>
+  // e.g.: %13 = hlfir.designate %3#0{"p"} ...
   // Though nothing is known about them, they would only alias with targets or
   // pointers
   // FIXME: Actually, if I comment out both of the following 'if' blocks
@@ -139,6 +140,7 @@ AliasResult AliasAnalysis::alias(Value lhs, Value rhs) {
     // Box for POINTER component inside an object of a derived type
     // may alias box of a POINTER object, as well as boxes for POINTER
     // components inside two objects of derived types may alias.
+    // FIXME: How does this make sense?
     if ((lhsSrc.isRecordWithPointerComponent() && rhsSrc.isTargetOrPointer()) ||
         (rhsSrc.isRecordWithPointerComponent() && lhsSrc.isTargetOrPointer()) ||
         (lhsSrc.isRecordWithPointerComponent() &&
@@ -186,6 +188,7 @@ AliasResult AliasAnalysis::alias(Value lhs, Value rhs) {
   // Box for POINTER component inside an object of a derived type
   // may alias box of a POINTER object, as well as boxes for POINTER
   // components inside two objects of derived types may alias.
+  // FIXME: How does this make sense?
   if ((src1->isRecordWithPointerComponent() && src2->isTargetOrPointer()) ||
       (src2->isRecordWithPointerComponent() && src1->isTargetOrPointer()) ||
       (src1->isRecordWithPointerComponent() &&
@@ -318,13 +321,14 @@ AliasAnalysis::Source AliasAnalysis::getSource(mlir::Value v) {
         })
         .Case<fir::LoadOp>([&](auto op) {
           if (followBoxAddr && mlir::isa<fir::BaseBoxType>(op.getType())) {
-            // For now, support the load of an argument, fir.address_of, or
-            // fir.alloca.
+            // For now, support the load of an argument, fir.address_of,
+            // fir.alloca, or hlfir.designate.
             // TODO: generalize to all operations (in particular fir.allocmem)
             auto def = getOriginalDef(op.getMemref(), attributes);
             if (isDummyArgument(def) ||
                 def.template getDefiningOp<fir::AddrOfOp>() ||
-                def.template getDefiningOp<fir::AllocaOp>()) {
+                def.template getDefiningOp<fir::AllocaOp>() ||
+                def.template getDefiningOp<hlfir::DesignateOp>()) {
               v = def;
               defOp = v.getDefiningOp();
               return;
@@ -400,6 +404,12 @@ AliasAnalysis::Source AliasAnalysis::getSource(mlir::Value v) {
           defOp = v.getDefiningOp();
         })
         .Case<hlfir::DesignateOp>([&](auto op) {
+          if (followBoxAddr && Source::isPointerReference(ty)) {
+            attributes.set(Attribute::Pointer);
+            type = SourceKind::Direct;
+            breakFromLoop = true;
+            return;
+          }
           // Track further through the memory indexed into
           // => if the source arrays/structures don't alias then nor do the
           //    results of hlfir.designate
