@@ -8,9 +8,12 @@
 // They cannot physically alias
 // CHECK-DAG: p1.addr#0 <-> p2.addr#0: NoAlias
 
-// p1.addr and p2.addr could both be wrapped inside boxes
-// CHECK-DAG: p1.addr#0 <-> boxp1.addr#0: MayAlias
-// CHECK-DAG: p2.addr#0 <-> boxp1.addr#0: MayAlias
+// FIXME: p1.addr is the address returned by an alloca.  It does not have a
+//        target attribute, and it is not the address retrieved from a pointer.
+//        It seems it should be able to alias nothing, but we used to expect
+//        MayAlias here.  Is that right?  What fortran produces such IR?
+// CHECK-DAG: p1.addr#0 <-> boxp1.addr#0: NoAlias
+// CHECK-DAG: p2.addr#0 <-> boxp1.addr#0: NoAlias
 
 // TODO: To really see aliasing, we should be looking at a load of p1.addr
 // p1.addr is just a local address holding the address to the data 

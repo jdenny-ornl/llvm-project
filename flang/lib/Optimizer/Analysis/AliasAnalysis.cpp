@@ -36,21 +36,6 @@ static bool isDummyArgument(mlir::Value v) {
   return blockArg.getOwner()->isEntryBlock();
 }
 
-/// Temporary function to skip through all the no op operations
-/// TODO: Generalize support of fir.load
-static mlir::Value getOriginalDef(mlir::Value v) {
-  mlir::Operation *defOp;
-  bool breakFromLoop = false;
-  while (!breakFromLoop && (defOp = v.getDefiningOp())) {
-    llvm::TypeSwitch<Operation *>(defOp)
-        .Case<fir::ConvertOp>([&](fir::ConvertOp op) { v = op.getValue(); })
-        .Case<fir::DeclareOp, hlfir::DeclareOp>(
-            [&](auto op) { v = op.getMemref(); })
-        .Default([&](auto op) { breakFromLoop = true; });
-  }
-  return v;
-}
-
 namespace fir {
 
 void AliasAnalysis::Source::print(llvm::raw_ostream &os) const {
@@ -108,11 +93,16 @@ AliasResult AliasAnalysis::alias(Value lhs, Value rhs) {
   }
 
   // SourceKind::Direct is set for the addresses wrapped in a box, perhaps from
-  // a global or an argument.
+  // a global, alloca, or argument.
   // e.g.: fir.global @_QMpointersEp : !fir.box<!fir.ptr<f32>>
+  // e.g.: %0 = fir.alloca !fir.box<!fir.ptr<f32>>
   // e.g.: %arg0: !fir.ref<!fir.box<!fir.ptr<f32>>>
   // Though nothing is known about them, they would only alias with targets or
   // pointers
+  // FIXME: Actually, if I comment out both of the following 'if' blocks
+  // involving directSourceToNonTargetOrPointer, check-flang still passes.  Why
+  // is this special handling needed?  Cases involving isTargetOrPointer are
+  // checked again later.
   bool directSourceToNonTargetOrPointer = false;
   if (lhsSrc.u != rhsSrc.u || lhsSrc.kind != rhsSrc.kind) {
     if ((lhsSrc.kind == SourceKind::Direct && !rhsSrc.isTargetOrPointer()) ||
@@ -260,6 +250,25 @@ getAttrsFromVariable(fir::FortranVariableOpInterface var) {
   return attrs;
 }
 
+/// Temporary function to skip through all the no op operations
+/// TODO: Generalize support of fir.load
+mlir::Value getOriginalDef(mlir::Value v,
+                           fir::AliasAnalysis::Source::Attributes &attributes) {
+  mlir::Operation *defOp;
+  bool breakFromLoop = false;
+  while (!breakFromLoop && (defOp = v.getDefiningOp())) {
+    llvm::TypeSwitch<Operation *>(defOp)
+        .Case<fir::ConvertOp>([&](fir::ConvertOp op) { v = op.getValue(); })
+        .Case<fir::DeclareOp, hlfir::DeclareOp>([&](auto op) {
+          v = op.getMemref();
+          auto varIf = llvm::cast<fir::FortranVariableOpInterface>(defOp);
+          attributes |= getAttrsFromVariable(varIf);
+        })
+        .Default([&](auto op) { breakFromLoop = true; });
+  }
+  return v;
+}
+
 AliasAnalysis::Source AliasAnalysis::getSource(mlir::Value v) {
   auto *defOp = v.getDefiningOp();
   SourceKind type{SourceKind::Unknown};
@@ -273,8 +282,13 @@ AliasAnalysis::Source AliasAnalysis::getSource(mlir::Value v) {
     ty = defOp->getResultTypes()[0];
     llvm::TypeSwitch<Operation *>(defOp)
         .Case<fir::AllocaOp, fir::AllocMemOp>([&](auto op) {
-          // Unique memory allocation.
-          type = SourceKind::Allocate;
+          // Unique memory allocation or the address stored there.
+          if (followBoxAddr && Source::isPointerReference(ty)) {
+            attributes.set(Attribute::Pointer);
+            type = SourceKind::Direct;
+          } else {
+            type = SourceKind::Allocate;
+          }
           breakFromLoop = true;
         })
         .Case<fir::ConvertOp>([&](auto op) {
@@ -304,12 +318,13 @@ AliasAnalysis::Source AliasAnalysis::getSource(mlir::Value v) {
         })
         .Case<fir::LoadOp>([&](auto op) {
           if (followBoxAddr && mlir::isa<fir::BaseBoxType>(op.getType())) {
-            // For now, support the load of an argument or fir.address_of
-            // TODO: generalize to all operations (in particular fir.alloca and
-            // fir.allocmem)
-            auto def = getOriginalDef(op.getMemref());
+            // For now, support the load of an argument, fir.address_of, or
+            // fir.alloca.
+            // TODO: generalize to all operations (in particular fir.allocmem)
+            auto def = getOriginalDef(op.getMemref(), attributes);
             if (isDummyArgument(def) ||
-                def.template getDefiningOp<fir::AddrOfOp>()) {
+                def.template getDefiningOp<fir::AddrOfOp>() ||
+                def.template getDefiningOp<fir::AllocaOp>()) {
               v = def;
               defOp = v.getDefiningOp();
               return;
