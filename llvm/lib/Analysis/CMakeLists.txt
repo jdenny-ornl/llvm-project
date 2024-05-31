@@ -106,6 +106,7 @@ add_llvm_component_library(LLVMAnalysis
   ObjCARCAliasAnalysis.cpp
   ObjCARCAnalysisUtils.cpp
   ObjCARCInstKind.cpp
+  KernelInfoAnalysis.cpp
   OptimizationRemarkEmitter.cpp
   OverflowInstAnalysis.cpp
   PHITransAddr.cpp
@@ -159,3 +160,5 @@ add_llvm_component_library(LLVMAnalysis
   Support
   TargetParser
   )
+
+add_subdirectory(plugins)
