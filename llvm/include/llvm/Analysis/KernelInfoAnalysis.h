@@ -43,6 +43,10 @@ public:
   /// The number of alloca instructions inside the function, the number of those
   /// with allocation sizes that cannot be determined at compile time, and the
   /// sum of the sizes that can be.
+  ///
+  /// With the current implementation for at least some GPU archs,
+  /// AllocaDynCount > 0 might not be possible, but we report AllocaDynCount
+  /// anyway in case the implementation changes.
   int64_t AllocaCount = 0;
   int64_t AllocaDynCount = 0;
   int64_t AllocaStaticSizeSum = 0;

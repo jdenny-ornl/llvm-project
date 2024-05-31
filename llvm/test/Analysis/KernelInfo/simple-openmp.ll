@@ -1,6 +1,7 @@
-; RUN: opt -pass-remarks=kernel-info -passes=kernel-info -disable-output %s |& \
-; RUN:   FileCheck -match-full-lines %s
-
+; Check a simple OpenMP program with allocas and calls.
+;
+; The LLVM IR for this test was generated as follows:
+;
 ; $ cat test.c
 ; #pragma omp declare target
 ; void f();
@@ -25,8 +26,12 @@
 ; $ clang -g -fopenmp -fopenmp-targets=nvptx64-nvidia-cuda -save-temps test.c
 ; $ llvm-dis test-openmp-nvptx64-nvidia-cuda.bc
 ;
-; Copied test-openmp-nvptx64-nvidia-cuda.ll here but trimmed code not relevant
-; for testing.
+; Copied test-openmp-nvptx64-nvidia-cuda.ll here and manually trimmed away LLVM
+; IR not relevant for testing.  Didn't run llvm-reduce as there are parts of the
+; LLVM IR we want to keep to be sure remarks are *not* generated for them.
+
+; RUN: opt -pass-remarks=kernel-info -passes=kernel-info -disable-output %s |& \
+; RUN:   FileCheck -match-full-lines %s
 
 ;  CHECK-NOT: {{.}}
 
@@ -205,14 +210,14 @@ attributes #18 = { "llvm.assume"="ompx_no_call_asm" }
 !8 = !{i32 1, !"ThinLTO", i32 0}
 !9 = !{i32 1, !"EnableSplitLTOUnit", i32 1}
 !10 = distinct !DICompileUnit(language: DW_LANG_C11, file: !11, producer: "clang version 19.0.0git", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, splitDebugInlining: false, nameTableKind: None)
-!11 = !DIFile(filename: "test.c", directory: "/home/jdenny")
+!11 = !DIFile(filename: "test.c", directory: "/tmp")
 !12 = !{ptr @__omp_offloading_10305_9a7e3f_h_l12_debug__, !"maxntidx", i32 128}
 !13 = !{ptr @__omp_offloading_10305_9a7e3f_h_l12, !"kernel", i32 1}
 !14 = !{i32 0, i32 66309, i32 10124863, !"h", i32 12, i32 0, i32 0}
 !15 = !{!"clang version 19.0.0git"}
 !16 = !{!"clang version 3.8.0 (tags/RELEASE_380/final)"}
 !17 = distinct !DISubprogram(name: "__omp_offloading_10305_9a7e3f_h_l12_debug__", scope: !18, file: !18, line: 13, type: !19, scopeLine: 13, flags: DIFlagArtificial | DIFlagPrototyped, spFlags: DISPFlagLocalToUnit | DISPFlagDefinition, unit: !10, retainedNodes: !24)
-!18 = !DIFile(filename: "test.c", directory: "/home/jdenny")
+!18 = !DIFile(filename: "test.c", directory: "/tmp")
 !19 = !DISubroutineType(types: !20)
 !20 = !{null, !21}
 !21 = !DIDerivedType(tag: DW_TAG_const_type, baseType: !22)

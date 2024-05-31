@@ -109,16 +109,10 @@ void KernelInfo::updateForBB(const BasicBlock &BB, int64_t Direction,
         AllocaDynCount += Direction;
       }
       remarkAlloca(ORE, F, *Alloca, StaticSize);
-    }
-    // TODO: FunctionPropertiesAnalysis counts these a bit differently.  For
-    // IndirectCallCount and DirectCallCount, it considers only CallInst.  For
-    // DirectCallsToDefinedFunctions, it considers all of BB not just
-    // BB.instructionsWithoutDebug().  Is that approach better somehow?
-    if (const auto *Call = dyn_cast<CallBase>(&I)) {
+    } else if (const auto *Call = dyn_cast<CallBase>(&I)) {
       StringRef CallKind;
       StringRef RemarkKind;
       if (Call->isIndirectCall()) {
-        // TODO: Can this happen in a kernel?
         IndirectCallCount += Direction;
         CallKind = "indirect call";
         RemarkKind = "IndirectCall";
@@ -153,11 +147,8 @@ static void remarkProperty(OptimizationRemarkEmitter &ORE, const Function &F,
 KernelInfo KernelInfo::getKernelInfo(Function &F,
                                      FunctionAnalysisManager &FAM) {
   KernelInfo KI;
-  // TODO: The goal is to analyze only modules for GPUs.  Is there a better
-  // way?  Other possibilities:
-  // - "openmp-device" metadata on module.
-  // - "kernel" attribute as seen in llvm::omp::isOpenMPKernel in
-  //   OpenMPOpt.cpp.
+  // Only analyze modules for GPUs.
+  // TODO: This would be more maintainable if there were an isGPU.
   const std::string &TT = F.getParent()->getTargetTriple();
   llvm::Triple T(TT);
   if (!T.isAMDGPU() && !T.isNVPTX())
