@@ -30,39 +30,39 @@
 
 ;  CHECK-NOT: {{.}}
 
-;      CHECK: remark: test.c:0:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', artificial alloca 'dyn_ptr' with static size of 8 bytes
-; CHECK-NEXT: remark: test.c:14:9: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', alloca 'i' with static size of 4 bytes
-; CHECK-NEXT: remark: test.c:15:9: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', alloca 'a' with static size of 8 bytes
-; CHECK-NEXT: remark: test.c:13:3: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', direct call to defined function, callee is '__kmpc_target_init'
-; CHECK-NEXT: remark: test.c:16:5: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', direct call, callee is 'f'
-; CHECK-NEXT: remark: test.c:17:5: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', direct call to defined function, callee is 'g'
-; CHECK-NEXT: remark: test.c:18:3: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', direct call to defined function, callee is '__kmpc_target_deinit'
-; CHECK-NEXT: remark: test.c:13:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', AllocaCount = 3
-; CHECK-NEXT: remark: test.c:13:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', AllocaStaticSizeSum = 20
-; CHECK-NEXT: remark: test.c:13:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', AllocaDynCount = 0
-; CHECK-NEXT: remark: test.c:13:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', DirectCallCount = 4
-; CHECK-NEXT: remark: test.c:13:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', IndirectCallCount = 0
-; CHECK-NEXT: remark: test.c:13:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12_debug__', DirectCallsToDefinedFunctions = 3
+;      CHECK: remark: test.c:0:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', artificial alloca 'dyn_ptr' with static size of 8 bytes
+; CHECK-NEXT: remark: test.c:14:9: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', alloca 'i' with static size of 4 bytes
+; CHECK-NEXT: remark: test.c:15:9: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', alloca 'a' with static size of 8 bytes
+; CHECK-NEXT: remark: test.c:13:3: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', direct call to defined function, callee is '__kmpc_target_init'
+; CHECK-NEXT: remark: test.c:16:5: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', direct call, callee is 'f'
+; CHECK-NEXT: remark: test.c:17:5: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', direct call to defined function, callee is 'g'
+; CHECK-NEXT: remark: test.c:18:3: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', direct call to defined function, callee is '__kmpc_target_deinit'
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', AllocaCount = 3
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', AllocaStaticSizeSum = 20
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', AllocaDynCount = 0
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', DirectCallCount = 4
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', IndirectCallCount = 0
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12_debug__', DirectCallsToDefinedFunctions = 3
 
-; CHECK-NEXT: remark: test.c:0:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12', artificial alloca 'dyn_ptr' with static size of 8 bytes
-; CHECK-NEXT: remark: test.c:12:1: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12', direct call to defined function, callee is artificial '__omp_offloading_10305_9a7e3f_h_l12_debug__'
-; CHECK-NEXT: remark: test.c:12:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12', AllocaCount = 1
-; CHECK-NEXT: remark: test.c:12:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12', AllocaStaticSizeSum = 8
-; CHECK-NEXT: remark: test.c:12:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12', AllocaDynCount = 0
-; CHECK-NEXT: remark: test.c:12:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12', DirectCallCount = 1
-; CHECK-NEXT: remark: test.c:12:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12', IndirectCallCount = 0
-; CHECK-NEXT: remark: test.c:12:0: in artificial kernel function '__omp_offloading_10305_9a7e3f_h_l12', DirectCallsToDefinedFunctions = 1
+; CHECK-NEXT: remark: test.c:0:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12', artificial alloca 'dyn_ptr' with static size of 8 bytes
+; CHECK-NEXT: remark: test.c:12:1: in artificial function '__omp_offloading_10305_9a7e3f_h_l12', direct call to defined function, callee is artificial '__omp_offloading_10305_9a7e3f_h_l12_debug__'
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12', AllocaCount = 1
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12', AllocaStaticSizeSum = 8
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12', AllocaDynCount = 0
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12', DirectCallCount = 1
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12', IndirectCallCount = 0
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '__omp_offloading_10305_9a7e3f_h_l12', DirectCallsToDefinedFunctions = 1
 
-; CHECK-NEXT: remark: test.c:4:7: in kernel function 'g', alloca 'i' with static size of 4 bytes
-; CHECK-NEXT: remark: test.c:5:7: in kernel function 'g', alloca 'a' with static size of 8 bytes
-; CHECK-NEXT: remark: test.c:6:3: in kernel function 'g', direct call, callee is 'f'
-; CHECK-NEXT: remark: test.c:7:3: in kernel function 'g', direct call to defined function, callee is 'g'
-; CHECK-NEXT: remark: test.c:3:0: in kernel function 'g', AllocaCount = 2
-; CHECK-NEXT: remark: test.c:3:0: in kernel function 'g', AllocaStaticSizeSum = 12
-; CHECK-NEXT: remark: test.c:3:0: in kernel function 'g', AllocaDynCount = 0
-; CHECK-NEXT: remark: test.c:3:0: in kernel function 'g', DirectCallCount = 2
-; CHECK-NEXT: remark: test.c:3:0: in kernel function 'g', IndirectCallCount = 0
-; CHECK-NEXT: remark: test.c:3:0: in kernel function 'g', DirectCallsToDefinedFunctions = 1
+; CHECK-NEXT: remark: test.c:4:7: in function 'g', alloca 'i' with static size of 4 bytes
+; CHECK-NEXT: remark: test.c:5:7: in function 'g', alloca 'a' with static size of 8 bytes
+; CHECK-NEXT: remark: test.c:6:3: in function 'g', direct call, callee is 'f'
+; CHECK-NEXT: remark: test.c:7:3: in function 'g', direct call to defined function, callee is 'g'
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', AllocaCount = 2
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', AllocaStaticSizeSum = 12
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', AllocaDynCount = 0
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', DirectCallCount = 2
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', IndirectCallCount = 0
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', DirectCallsToDefinedFunctions = 1
 
 ;  CHECK-NOT: {{.}}
 

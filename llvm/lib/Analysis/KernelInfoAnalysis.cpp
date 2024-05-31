@@ -29,7 +29,7 @@ static void identifyFunction(OptimizationRemark &R, const Function &F) {
     if (SubProgram->isArtificial())
       R << "artificial ";
   }
-  R << "kernel function '" << F.getName() << "'";
+  R << "function '" << F.getName() << "'";
 }
 
 static void remarkAlloca(OptimizationRemarkEmitter &ORE, const Function &Caller,
