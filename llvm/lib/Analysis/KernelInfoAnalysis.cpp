@@ -153,10 +153,6 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
   llvm::Triple T(TT);
   if (!T.isAMDGPU() && !T.isNVPTX())
     return KI;
-  // TODO: The goal is to check that it's a user function and not something
-  // like __kmpc_target_init.  Is there a better way?
-  if (!DiagnosticLocation(F.getSubprogram()).isValid())
-    return KI;
   KI.IsValid = true;
 
   const DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(F);

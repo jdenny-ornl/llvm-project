@@ -72,8 +72,10 @@
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', DirectCallCount = 2
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', IndirectCallCount = 0
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', DirectCallsToDefinedFunctions = 1
+;  CHECK-NOT: remark: {{.*: in function 'g',.*}}
 
-;  CHECK-NOT: {{.}}
+; A lot of internal functions (e.g., __kmpc_target_init) come next, but we don't
+; want to maintain a list of their allocas, calls, etc. in this test.
 
 ; ModuleID = 'test-openmp-nvptx64-nvidia-cuda.bc'
 source_filename = "test.c"
