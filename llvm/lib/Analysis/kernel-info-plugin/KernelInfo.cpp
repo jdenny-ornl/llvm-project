@@ -1,4 +1,4 @@
-//===- KernelInfoAnalysis.cpp - Kernel Analysis ---------------------------===//
+//===- KernelInfo.cpp - Kernel Analysis -----------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,19 +6,21 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file defines the KernelInfo and KernelInfoAnalysis classes used to
-// extract function properties from a kernel.
+// This file defines the KernelInfo, KernelInfoAnalysis, and KernelInfoPrinter
+// classes used to extract function properties from a kernel.
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Analysis/KernelInfoAnalysis.h"
+#include "llvm/Analysis/KernelInfo.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Metadata.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
+#include "llvm/Passes/PassPlugin.h"
 
 using namespace llvm;
 
@@ -175,3 +177,39 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
 }
 
 AnalysisKey KernelInfoAnalysis::Key;
+
+llvm::PassPluginLibraryInfo getKernelInfoPluginInfo() {
+  using namespace llvm;
+  return {
+      LLVM_PLUGIN_API_VERSION, "KernelInfoPrinter", LLVM_VERSION_STRING,
+      [](PassBuilder &PB) {
+        // Enables: AM.getResult<KernelInfoAnalysis>(F)
+        PB.registerAnalysisRegistrationCallback(
+            [](llvm::FunctionAnalysisManager &PM) {
+              PM.registerPass([&] { return KernelInfoAnalysis(); });
+            });
+        // Enables: opt -passes=kernel-info
+        PB.registerPipelineParsingCallback(
+            [&](StringRef Name, FunctionPassManager &FPM,
+                ArrayRef<PassBuilder::PipelineElement>) {
+              if (Name == "kernel-info") {
+                FPM.addPass(KernelInfoPrinter());
+                return true;
+              }
+              return false;
+            });
+        // Insert into pipeline formed by, e.g., opt -passes='default<O1>'.
+        PB.registerVectorizerStartEPCallback(
+            [](llvm::FunctionPassManager &PM, llvm::OptimizationLevel Level) {
+              PM.addPass(KernelInfoPrinter());
+            });
+      }};
+}
+
+// Used when built as dynamic plugin.
+#ifndef LLVM_KERNELINFO_LINK_INTO_TOOLS
+extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
+llvmGetPassPluginInfo() {
+  return getKernelInfoPluginInfo();
+}
+#endif

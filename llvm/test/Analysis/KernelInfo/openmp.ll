@@ -34,7 +34,8 @@
 ; $ llvm-dis test-openmp-nvptx64-nvidia-cuda.bc
 ; $ cat test-openmp-nvptx64-nvidia-cuda.ll >> $THIS_TEST.ll
 
-; RUN: opt -pass-remarks=kernel-info -passes=kernel-info -disable-output %s |& \
+; RUN: opt %loadkernelinfo -pass-remarks=kernel-info -passes=kernel-info \
+; RUN:     -disable-output %s |& \
 ; RUN:   FileCheck -match-full-lines %s
 
 ;  CHECK-NOT: {{.}}

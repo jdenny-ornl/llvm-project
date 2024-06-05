@@ -410,6 +410,18 @@ else:
         )
     )
 
+if config.linked_kernelinfo_extension:
+    config.substitutions.append(("%loadkernelinfo", ""))
+else:
+    config.substitutions.append(
+        (
+            "%loadkernelinfo",
+            "-load-pass-plugin={}/KernelInfo{}".format(
+                config.llvm_shlib_dir, config.llvm_shlib_ext
+            ),
+        )
+    )
+
 # Static libraries are not built if BUILD_SHARED_LIBS is ON.
 if not config.build_shared_libs and not config.link_llvm_dylib:
     config.available_features.add("static-libs")

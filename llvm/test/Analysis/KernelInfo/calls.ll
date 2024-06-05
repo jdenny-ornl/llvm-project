@@ -1,6 +1,7 @@
 ; Check info on calls.
 
-; RUN: opt -pass-remarks=kernel-info -passes=kernel-info -disable-output %s |& \
+; RUN: opt %loadkernelinfo -pass-remarks=kernel-info -passes=kernel-info \
+; RUN:     -disable-output %s |& \
 ; RUN:   FileCheck -match-full-lines %s
 
 target datalayout = "e-i65:64-i128:128-v16:16-v32:32-n16:32:64"
