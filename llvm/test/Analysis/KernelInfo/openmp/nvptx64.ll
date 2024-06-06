@@ -1,38 +1,4 @@
-; Check that KernelInfoAnalysis behaves reasonably for LLVM IR produced by Clang
-; OpenMP codegen.
-;
-; To keep the LLVM IR in this test faithful to Clang OpenMP codegen, do not
-; tweak or reduce it.  Other tests more exhaustively check the general features
-; of KernelInfoAnalysis using minimal LLVM IR.
-;
-; Should Clang OpenMP codegen change, the LLVM IR in this test can be
-; regenerated as follows.  First remove the LLVM IR from this test, and then:
-;
-; $ cd /tmp
-; $ cat test.c
-; #pragma omp declare target
-; void f();
-; void g() {
-;   int i;
-;   int a[2];
-;   f();
-;   g();
-; }
-; #pragma omp end declare target
-;
-; void h(int i) {
-;   #pragma omp target map(tofrom:i)
-;   {
-;     int i;
-;     int a[2];
-;     f();
-;     g();
-;   }
-; }
-;
-; $ clang -g -fopenmp -fopenmp-targets=nvptx64-nvidia-cuda -save-temps -c test.c
-; $ llvm-dis test-openmp-nvptx64-nvidia-cuda.bc
-; $ cat test-openmp-nvptx64-nvidia-cuda.ll >> $THIS_TEST.ll
+; See ./README.md for how to maintain the LLVM IR in this test.
 
 ; RUN: opt %loadkernelinfo -pass-remarks=kernel-info -passes=kernel-info \
 ; RUN:     -disable-output %s |& \
@@ -82,6 +48,7 @@
 
 ; A lot of internal functions (e.g., __kmpc_target_init) come next, but we don't
 ; want to maintain a list of their allocas, calls, etc. in this test.
+
 
 ; ModuleID = 'test-openmp-nvptx64-nvidia-cuda.bc'
 source_filename = "test.c"
