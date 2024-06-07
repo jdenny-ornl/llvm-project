@@ -197,6 +197,12 @@ if(LLVM_BUILD_EXAMPLES)
   endif()
 endif()
 
+if (NOT WIN32)
+  list(APPEND LLVM_TEST_DEPENDS
+    KernelInfo
+    )
+endif()
+
 if(TARGET ocaml_llvm)
   # Clear all non-OCaml cross-target dependencies when building out-of-tree.
   if(LLVM_OCAML_OUT_OF_TREE)
