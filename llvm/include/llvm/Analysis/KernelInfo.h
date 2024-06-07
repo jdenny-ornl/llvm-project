@@ -83,13 +83,16 @@ public:
   int64_t AllocaDynCount = 0;
   int64_t AllocaStaticSizeSum = 0;
 
-  /// Call related instructions.
-  int64_t DirectCallCount = 0;
-  int64_t IndirectCallCount = 0;
+  /// Number of direct/indirect calls (anything derived from CallBase).
+  int64_t DirectCalls = 0;
+  int64_t IndirectCalls = 0;
 
   /// Number of direct calls made from this function to other functions
   /// defined in this module.
   int64_t DirectCallsToDefinedFunctions = 0;
+
+  /// Number of calls of type InvokeInst.
+  int64_t Invokes = 0;
 };
 
 /// Analysis class for KernelInfo.

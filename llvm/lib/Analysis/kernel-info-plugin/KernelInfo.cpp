@@ -115,21 +115,31 @@ void KernelInfo::updateForBB(const BasicBlock &BB, int64_t Direction,
       }
       remarkAlloca(ORE, F, *Alloca, StaticSize);
     } else if (const auto *Call = dyn_cast<CallBase>(&I)) {
-      StringRef CallKind;
-      StringRef RemarkKind;
+      std::string CallKind;
+      std::string RemarkKind;
       if (Call->isIndirectCall()) {
-        IndirectCallCount += Direction;
-        CallKind = "indirect call";
-        RemarkKind = "IndirectCall";
+        IndirectCalls += Direction;
+        CallKind += "indirect";
+        RemarkKind += "Indirect";
       } else {
-        DirectCallCount += Direction;
-        CallKind = "direct call";
-        RemarkKind = "DirectCall";
+        DirectCalls += Direction;
+        CallKind += "direct";
+        RemarkKind += "Direct";
+      }
+      if (isa<InvokeInst>(Call)) {
+        Invokes += Direction;
+        CallKind += " invoke";
+        RemarkKind += "Invoke";
+      } else {
+        CallKind += " call";
+        RemarkKind += "Call";
+      }
+      if (!Call->isIndirectCall()) {
         if (const Function *Callee = Call->getCalledFunction()) {
           if (Callee && !Callee->isIntrinsic() && !Callee->isDeclaration()) {
             DirectCallsToDefinedFunctions += Direction;
-            CallKind = "direct call to defined function";
-            RemarkKind = "DirectCallToDefinedFunction";
+            CallKind += " to defined function";
+            RemarkKind += "ToDefinedFunction";
           }
         }
       }
@@ -171,9 +181,10 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
   REMARK_PROPERTY(AllocaCount);
   REMARK_PROPERTY(AllocaStaticSizeSum);
   REMARK_PROPERTY(AllocaDynCount);
-  REMARK_PROPERTY(DirectCallCount);
-  REMARK_PROPERTY(IndirectCallCount);
+  REMARK_PROPERTY(DirectCalls);
+  REMARK_PROPERTY(IndirectCalls);
   REMARK_PROPERTY(DirectCallsToDefinedFunctions);
+  REMARK_PROPERTY(Invokes);
 #undef REMARK_PROPERTY
 
   return KI;

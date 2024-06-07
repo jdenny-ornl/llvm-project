@@ -21,18 +21,20 @@
 ; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', AllocaCount = 3
 ; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', AllocaStaticSizeSum = 20
 ; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', AllocaDynCount = 0
-; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', DirectCallCount = 4
-; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', IndirectCallCount = 0
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', DirectCalls = 4
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', IndirectCalls = 0
 ; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', DirectCallsToDefinedFunctions = 3
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', Invokes = 0
 
 ; CHECK-NEXT: remark: test.c:0:0: in artificial function '[[OFF_FUNC]]', artificial alloca 'dyn_ptr' with static size of 8 bytes
 ; CHECK-NEXT: remark: test.c:12:1: in artificial function '[[OFF_FUNC]]', direct call to defined function, callee is artificial '[[OFF_FUNC]]_debug__'
 ; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', AllocaCount = 1
 ; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', AllocaStaticSizeSum = 8
 ; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', AllocaDynCount = 0
-; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', DirectCallCount = 1
-; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', IndirectCallCount = 0
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', DirectCalls = 1
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', IndirectCalls = 0
 ; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', DirectCallsToDefinedFunctions = 1
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', Invokes = 0
 
 ; CHECK-NEXT: remark: test.c:4:7: in function 'g', alloca 'i' with static size of 4 bytes
 ; CHECK-NEXT: remark: test.c:5:7: in function 'g', alloca 'a' with static size of 8 bytes
@@ -41,9 +43,10 @@
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', AllocaCount = 2
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', AllocaStaticSizeSum = 12
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', AllocaDynCount = 0
-; CHECK-NEXT: remark: test.c:3:0: in function 'g', DirectCallCount = 2
-; CHECK-NEXT: remark: test.c:3:0: in function 'g', IndirectCallCount = 0
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', DirectCalls = 2
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', IndirectCalls = 0
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', DirectCallsToDefinedFunctions = 1
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', Invokes = 0
 ;  CHECK-NOT: remark: {{.*: in function 'g',.*}}
 
 ; A lot of internal functions (e.g., __kmpc_target_init) come next, but we don't
