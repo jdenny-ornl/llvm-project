@@ -104,14 +104,14 @@ void KernelInfo::updateForBB(const BasicBlock &BB, int64_t Direction,
   const DataLayout &DL = M.getDataLayout();
   for (const Instruction &I : BB.instructionsWithoutDebug()) {
     if (const AllocaInst *Alloca = dyn_cast<AllocaInst>(&I)) {
-      AllocaCount += Direction;
+      Allocas += Direction;
       TypeSize::ScalarTy StaticSize = 0;
       if (std::optional<TypeSize> Size = Alloca->getAllocationSize(DL)) {
         StaticSize = Size->getFixedValue();
         assert(StaticSize <= std::numeric_limits<int64_t>::max());
-        AllocaStaticSizeSum += Direction * StaticSize;
+        AllocasStaticSizeSum += Direction * StaticSize;
       } else {
-        AllocaDynCount += Direction;
+        AllocasDyn += Direction;
       }
       remarkAlloca(ORE, F, *Alloca, StaticSize);
     } else if (const auto *Call = dyn_cast<CallBase>(&I)) {
@@ -178,9 +178,9 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
 
 #define REMARK_PROPERTY(PROP_NAME)                                             \
   remarkProperty(ORE, F, #PROP_NAME, KI.PROP_NAME)
-  REMARK_PROPERTY(AllocaCount);
-  REMARK_PROPERTY(AllocaStaticSizeSum);
-  REMARK_PROPERTY(AllocaDynCount);
+  REMARK_PROPERTY(Allocas);
+  REMARK_PROPERTY(AllocasStaticSizeSum);
+  REMARK_PROPERTY(AllocasDyn);
   REMARK_PROPERTY(DirectCalls);
   REMARK_PROPERTY(IndirectCalls);
   REMARK_PROPERTY(DirectCallsToDefinedFunctions);

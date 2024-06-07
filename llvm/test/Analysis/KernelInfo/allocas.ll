@@ -20,9 +20,9 @@ entry:
   tail call void @llvm.dbg.declare(metadata ptr %a, metadata !16, metadata !DIExpression()), !dbg !20
   ret void
 }
-; CHECK: remark: test.c:13:0: in artificial function 'h', AllocaCount = 3
-; CHECK: remark: test.c:13:0: in artificial function 'h', AllocaStaticSizeSum = 20
-; CHECK: remark: test.c:13:0: in artificial function 'h', AllocaDynCount = 0
+; CHECK: remark: test.c:13:0: in artificial function 'h', Allocas = 3
+; CHECK: remark: test.c:13:0: in artificial function 'h', AllocasStaticSizeSum = 20
+; CHECK: remark: test.c:13:0: in artificial function 'h', AllocasDyn = 0
 
 define void @g() !dbg !21 {
 entry:
@@ -34,9 +34,9 @@ entry:
   tail call void @llvm.dbg.declare(metadata ptr %a, metadata !25, metadata !DIExpression()), !dbg !26
   ret void
 }
-; CHECK: remark: test.c:3:0: in function 'g', AllocaCount = 2
-; CHECK: remark: test.c:3:0: in function 'g', AllocaStaticSizeSum = 12
-; CHECK: remark: test.c:3:0: in function 'g', AllocaDynCount = 0
+; CHECK: remark: test.c:3:0: in function 'g', Allocas = 2
+; CHECK: remark: test.c:3:0: in function 'g', AllocasStaticSizeSum = 12
+; CHECK: remark: test.c:3:0: in function 'g', AllocasDyn = 0
 
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
 declare void @llvm.dbg.declare(metadata, metadata, metadata) #0

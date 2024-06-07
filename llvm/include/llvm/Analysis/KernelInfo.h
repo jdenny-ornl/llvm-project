@@ -77,11 +77,11 @@ public:
   /// sum of the sizes that can be.
   ///
   /// With the current implementation for at least some GPU archs,
-  /// AllocaDynCount > 0 might not be possible, but we report AllocaDynCount
-  /// anyway in case the implementation changes.
-  int64_t AllocaCount = 0;
-  int64_t AllocaDynCount = 0;
-  int64_t AllocaStaticSizeSum = 0;
+  /// AllocasDyn > 0 might not be possible, but we report AllocasDyn anyway in
+  /// case the implementation changes.
+  int64_t Allocas = 0;
+  int64_t AllocasDyn = 0;
+  int64_t AllocasStaticSizeSum = 0;
 
   /// Number of direct/indirect calls (anything derived from CallBase).
   int64_t DirectCalls = 0;
