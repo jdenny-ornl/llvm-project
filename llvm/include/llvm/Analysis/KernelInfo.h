@@ -9,7 +9,41 @@
 // This file defines the KernelInfo, KernelInfoAnalysis, and KernelInfoPrinter
 // classes used to extract function properties from a kernel.
 //
-//===----------------------------------------------------------------------===//
+// Usage examples:
+//
+// $ opt -load-pass-plugin=$LLVM_DIR/lib/KernelInfo.so \
+//       -pass-remarks=kernel-info -passes=kernel-info \
+//       -disable-output test-openmp-nvptx64-nvidia-cuda.bc
+//
+// $ opt -load-pass-plugin=$LLVM_DIR/lib/KernelInfo.so \
+//       -pass-remarks=kernel-info -passes='default<O1>' \
+//       -disable-output test-openmp-nvptx64-nvidia-cuda.bc
+//
+// $ clang -fpass-plugin=$LLVM_DIR/lib/KernelInfo.so -Rpass=kernel-info -g \
+//         -fopenmp -fopenmp-targets=nvptx64-nvidia-cuda test.c
+//
+// When this plugin is loaded, getKernelInfoPluginInfo in KernelInfo.cpp
+// automatically inserts it into any LLVM pass list.  This behavior is most
+// helpful when trying to run KernelInfoAnalysis using clang, which, unlike opt,
+// seems to have no way to run a single LLVM pass by itself.
+//
+// How to load the plugin depends on the cmake variable
+// LLVM_KERNELINFO_LINK_INTO_TOOLS, as defined by add_llvm_pass_plugin in
+// ./CMakeLists.txt:
+//
+// - If set to On, then this plugin pass is linked statically, so it's always
+//   loaded, whether using clang or opt.
+// - Otherwise, this pass is a dynamically linked plugin, and something like
+//   "opt -load-pass-plugin" or "clang -fpass-plugin" must be used to load it,
+//   as in the above examples.
+//
+// opt, clang, etc. from forks of LLVM can sometimes successfully load and use
+// this plugin even when this plugin is built as part of upstream LLVM sources.
+// However, if a fork has diverged, the plugin might crash or otherwise
+// misbehave.  Also, some clang forks have been known to produce altered debug
+// metadata that this plugin cannot interpret and thus must ignore, limiting
+// the info in the remarks it produces.
+// ===---------------------------------------------------------------------===//
 
 #ifndef LLVM_ANALYSIS_KERNELINFO_H
 #define LLVM_ANALYSIS_KERNELINFO_H
@@ -73,34 +107,6 @@ public:
 /// Printer pass for KernelInfoAnalysis.
 ///
 /// It just calls KernelInfoAnalysis, which prints remarks if they are enabled.
-///
-/// Usage examples:
-///
-/// $ opt -load-pass-plugin=$LLVM_DIR/lib/KernelInfo.so \
-///       -pass-remarks=kernel-info -passes=kernel-info \
-///       -disable-output test-openmp-nvptx64-nvidia-cuda.bc
-///
-/// $ opt -load-pass-plugin=$LLVM_DIR/lib/KernelInfo.so \
-///       -pass-remarks=kernel-info -passes='default<O1>' \
-///       -disable-output test-openmp-nvptx64-nvidia-cuda.bc
-///
-/// $ clang -fpass-plugin=$LLVM_DIR/lib/KernelInfo.so -Rpass=kernel-info -g \
-///         -fopenmp -fopenmp-targets=nvptx64-nvidia-cuda test.c
-///
-/// When this plugin is loaded, getKernelInfoPluginInfo in KernelInfo.cpp
-/// automatically inserts it into any LLVM pass list.  This behavior is most
-/// helpful when trying to run KernelInfoAnalysis using clang, which, unlike
-/// opt, seems to have no way to run a single LLVM pass by itself.
-///
-/// How to load the plugin depends on the cmake variable
-/// LLVM_KERNELINFO_LINK_INTO_TOOLS, as defined by add_llvm_pass_plugin in
-/// ./CMakeLists.txt:
-///
-/// - If set to On, then this plugin pass is linked statically, so it's always
-///   loaded, whether using clang or opt.
-/// - Otherwise, this pass is a dynamically linked plugin, and something like
-///   "opt -load-pass-plugin" or "clang -fpass-plugin" must be used to load it,
-///   as in the above examples.
 class KernelInfoPrinter : public PassInfoMixin<KernelInfoPrinter> {
 public:
   explicit KernelInfoPrinter() {}
