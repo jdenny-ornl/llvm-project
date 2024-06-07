@@ -202,7 +202,7 @@ llvm::PassPluginLibraryInfo getKernelInfoPluginInfo() {
               return false;
             });
         // Insert into pipeline formed by, e.g., opt -passes='default<O1>'.
-        PB.registerVectorizerStartEPCallback(
+        PB.registerScalarOptimizerLateEPCallback(
             [](llvm::FunctionPassManager &PM, llvm::OptimizationLevel Level) {
               PM.addPass(KernelInfoPrinter());
             });
