@@ -55,10 +55,13 @@ static void remarkAlloca(OptimizationRemarkEmitter &ORE, const Function &Caller,
     R << ", ";
     if (Artificial)
       R << "artificial ";
-    if (Name.empty())
+    if (Name.empty()) {
       R << "unnamed alloca ";
-    else
+      if (DVRs.empty())
+        R << "(missing debug metadata) ";
+    } else {
       R << "alloca '" << Name << "' ";
+    }
     R << "with ";
     if (StaticSize)
       R << "static size of " << itostr(StaticSize) << " bytes";
