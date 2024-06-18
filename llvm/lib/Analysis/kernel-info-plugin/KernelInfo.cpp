@@ -26,6 +26,11 @@ using namespace llvm;
 
 #define DEBUG_TYPE "kernel-info"
 
+static bool isKernelFunction(Function &F) {
+  // TODO: Is this general enough?  Consider languages beyond OpenMP.
+  return F.hasFnAttribute("kernel");
+}
+
 static void identifyFunction(OptimizationRemark &R, const Function &F) {
   if (auto *SubProgram = F.getSubprogram()) {
     if (SubProgram->isArtificial())
@@ -170,14 +175,18 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
     return KI;
   KI.IsValid = true;
 
-  const DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(F);
+  // Report potentially problematic linkage.
   auto &ORE = FAM.getResult<OptimizationRemarkEmitterAnalysis>(F);
+  KI.ExternalNotKernel = F.hasExternalLinkage() && !isKernelFunction(F);
+
+  const DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(F);
   for (const auto &BB : F)
     if (DT.isReachableFromEntry(&BB))
       KI.updateForBB(BB, +1, ORE);
 
 #define REMARK_PROPERTY(PROP_NAME)                                             \
   remarkProperty(ORE, F, #PROP_NAME, KI.PROP_NAME)
+  REMARK_PROPERTY(ExternalNotKernel);
   REMARK_PROPERTY(Allocas);
   REMARK_PROPERTY(AllocasStaticSizeSum);
   REMARK_PROPERTY(AllocasDyn);

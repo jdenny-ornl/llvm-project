@@ -18,6 +18,7 @@
 ; CHECK-NEXT: remark: test.c:16:5: in artificial function '[[OFF_FUNC]]_debug__', direct call, callee is 'f'
 ; CHECK-NEXT: remark: test.c:17:5: in artificial function '[[OFF_FUNC]]_debug__', direct call to defined function, callee is 'g'
 ; CHECK-NEXT: remark: test.c:18:3: in artificial function '[[OFF_FUNC]]_debug__', direct call to defined function, callee is '__kmpc_target_deinit'
+; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', ExternalNotKernel = 0
 ; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', Allocas = 3
 ; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', AllocasStaticSizeSum = 20
 ; CHECK-NEXT: remark: test.c:13:0: in artificial function '[[OFF_FUNC]]_debug__', AllocasDyn = 0
@@ -28,6 +29,7 @@
 
 ; CHECK-NEXT: remark: test.c:0:0: in artificial function '[[OFF_FUNC]]', artificial alloca 'dyn_ptr' with static size of 8 bytes
 ; CHECK-NEXT: remark: test.c:12:1: in artificial function '[[OFF_FUNC]]', direct call to defined function, callee is artificial '[[OFF_FUNC]]_debug__'
+; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', ExternalNotKernel = 0
 ; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', Allocas = 1
 ; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', AllocasStaticSizeSum = 8
 ; CHECK-NEXT: remark: test.c:12:0: in artificial function '[[OFF_FUNC]]', AllocasDyn = 0
@@ -40,6 +42,7 @@
 ; CHECK-NEXT: remark: test.c:5:7: in function 'g', alloca 'a' with static size of 8 bytes
 ; CHECK-NEXT: remark: test.c:6:3: in function 'g', direct call, callee is 'f'
 ; CHECK-NEXT: remark: test.c:7:3: in function 'g', direct call to defined function, callee is 'g'
+; CHECK-NEXT: remark: test.c:3:0: in function 'g', ExternalNotKernel = 1
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', Allocas = 2
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', AllocasStaticSizeSum = 12
 ; CHECK-NEXT: remark: test.c:3:0: in function 'g', AllocasDyn = 0

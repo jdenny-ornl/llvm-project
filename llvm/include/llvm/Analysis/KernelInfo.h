@@ -72,6 +72,9 @@ public:
   /// appear in a module compiled for a GPU.
   bool IsValid = false;
 
+  /// Whether the function has external linkage and is not a kernel function.
+  bool ExternalNotKernel = false;
+
   /// The number of alloca instructions inside the function, the number of those
   /// with allocation sizes that cannot be determined at compile time, and the
   /// sum of the sizes that can be.
