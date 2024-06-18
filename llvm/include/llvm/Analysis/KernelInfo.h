@@ -75,6 +75,29 @@ public:
   /// Whether the function has external linkage and is not a kernel function.
   bool ExternalNotKernel = false;
 
+  /// OpenMP Launch bounds.
+  ///@{
+  std::optional<int64_t> OmpTargetNumTeams;
+  std::optional<int64_t> OmpTargetThreadLimit;
+  ///@}
+
+  /// AMDGPU launch bounds.
+  ///@{
+  std::optional<int64_t> AmdgpuMaxNumWorkgroupsX;
+  std::optional<int64_t> AmdgpuMaxNumWorkgroupsY;
+  std::optional<int64_t> AmdgpuMaxNumWorkgroupsZ;
+  std::optional<int64_t> AmdgpuFlatWorkGroupSizeMin;
+  std::optional<int64_t> AmdgpuFlatWorkGroupSizeMax;
+  std::optional<int64_t> AmdgpuWavesPerEuMin;
+  std::optional<int64_t> AmdgpuWavesPerEuMax;
+  ///@}
+
+  /// NVPTX launch bounds.
+  ///@{
+  std::optional<int64_t> Maxclusterrank;
+  std::optional<int64_t> Maxntidx;
+  ///@}
+
   /// The number of alloca instructions inside the function, the number of those
   /// with allocation sizes that cannot be determined at compile time, and the
   /// sum of the sizes that can be.

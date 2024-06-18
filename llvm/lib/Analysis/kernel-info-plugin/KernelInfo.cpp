@@ -164,6 +164,74 @@ static void remarkProperty(OptimizationRemarkEmitter &ORE, const Function &F,
   });
 }
 
+static void remarkProperty(OptimizationRemarkEmitter &ORE, const Function &F,
+                           StringRef Name, std::optional<int64_t> Value) {
+  if (!Value)
+    return;
+  remarkProperty(ORE, F, Name, Value.value());
+}
+
+static std::vector<std::optional<int64_t>>
+parseFnAttrAsIntegerFields(Function &F, StringRef Name, unsigned NumFields) {
+  std::vector<std::optional<int64_t>> Result(NumFields);
+  Attribute A = F.getFnAttribute(Name);
+  if (!A.isStringAttribute())
+    return Result;
+  StringRef Rest = A.getValueAsString();
+  for (unsigned I = 0; I < NumFields; ++I) {
+    StringRef Field;
+    std::tie(Field, Rest) = Rest.split(',');
+    if (Field.empty())
+      break;
+    int64_t Val;
+    if (Field.getAsInteger(0, Val)) {
+      F.getContext().emitError("cannot parse integer in attribute '" + Name +
+                               "': " + Field);
+      break;
+    }
+    Result[I] = Val;
+  }
+  if (!Rest.empty())
+    F.getContext().emitError("too many fields in attribute " + Name);
+  return Result;
+}
+
+static std::optional<int64_t> parseFnAttrAsInteger(Function &F,
+                                                   StringRef Name) {
+  return parseFnAttrAsIntegerFields(F, Name, 1)[0];
+}
+
+// TODO: This nearly duplicates the same function in OMPIRBuilder.cpp.  Can we
+// share?
+static MDNode *getNVPTXMDNode(Function &F, StringRef Name) {
+  Module &M = *F.getParent();
+  NamedMDNode *MD = M.getNamedMetadata("nvvm.annotations");
+  if (!MD)
+    return nullptr;
+  for (auto *Op : MD->operands()) {
+    if (Op->getNumOperands() != 3)
+      continue;
+    auto *KernelOp = dyn_cast<ConstantAsMetadata>(Op->getOperand(0));
+    if (!KernelOp || KernelOp->getValue() != &F)
+      continue;
+    auto *Prop = dyn_cast<MDString>(Op->getOperand(1));
+    if (!Prop || Prop->getString() != Name)
+      continue;
+    return Op;
+  }
+  return nullptr;
+}
+
+static std::optional<int64_t> parseNVPTXMDNodeAsInteger(Function &F,
+                                                        StringRef Name) {
+  std::optional<int64_t> Result;
+  if (MDNode *ExistingOp = getNVPTXMDNode(F, Name)) {
+    auto *Op = cast<ConstantAsMetadata>(ExistingOp->getOperand(2));
+    Result = cast<ConstantInt>(Op->getValue())->getZExtValue();
+  }
+  return Result;
+}
+
 KernelInfo KernelInfo::getKernelInfo(Function &F,
                                      FunctionAnalysisManager &FAM) {
   KernelInfo KI;
@@ -175,11 +243,28 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
     return KI;
   KI.IsValid = true;
 
-  // Report potentially problematic linkage.
-  auto &ORE = FAM.getResult<OptimizationRemarkEmitterAnalysis>(F);
+  // Record function properties.
   KI.ExternalNotKernel = F.hasExternalLinkage() && !isKernelFunction(F);
+  KI.OmpTargetNumTeams = parseFnAttrAsInteger(F, "omp_target_num_teams");
+  KI.OmpTargetThreadLimit = parseFnAttrAsInteger(F, "omp_target_thread_limit");
+  auto AmdgpuMaxNumWorkgroups =
+      parseFnAttrAsIntegerFields(F, "amdgpu-max-num-workgroups", 3);
+  KI.AmdgpuMaxNumWorkgroupsX = AmdgpuMaxNumWorkgroups[0];
+  KI.AmdgpuMaxNumWorkgroupsY = AmdgpuMaxNumWorkgroups[1];
+  KI.AmdgpuMaxNumWorkgroupsZ = AmdgpuMaxNumWorkgroups[2];
+  auto AmdgpuFlatWorkGroupSize =
+      parseFnAttrAsIntegerFields(F, "amdgpu-flat-work-group-size", 2);
+  KI.AmdgpuFlatWorkGroupSizeMin = AmdgpuFlatWorkGroupSize[0];
+  KI.AmdgpuFlatWorkGroupSizeMax = AmdgpuFlatWorkGroupSize[1];
+  auto AmdgpuWavesPerEu =
+      parseFnAttrAsIntegerFields(F, "amdgpu-waves-per-eu", 2);
+  KI.AmdgpuWavesPerEuMin = AmdgpuWavesPerEu[0];
+  KI.AmdgpuWavesPerEuMax = AmdgpuWavesPerEu[1];
+  KI.Maxclusterrank = parseNVPTXMDNodeAsInteger(F, "maxclusterrank");
+  KI.Maxntidx = parseNVPTXMDNodeAsInteger(F, "maxntidx");
 
   const DominatorTree &DT = FAM.getResult<DominatorTreeAnalysis>(F);
+  auto &ORE = FAM.getResult<OptimizationRemarkEmitterAnalysis>(F);
   for (const auto &BB : F)
     if (DT.isReachableFromEntry(&BB))
       KI.updateForBB(BB, +1, ORE);
@@ -187,6 +272,17 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
 #define REMARK_PROPERTY(PROP_NAME)                                             \
   remarkProperty(ORE, F, #PROP_NAME, KI.PROP_NAME)
   REMARK_PROPERTY(ExternalNotKernel);
+  REMARK_PROPERTY(OmpTargetNumTeams);
+  REMARK_PROPERTY(OmpTargetThreadLimit);
+  REMARK_PROPERTY(AmdgpuMaxNumWorkgroupsX);
+  REMARK_PROPERTY(AmdgpuMaxNumWorkgroupsY);
+  REMARK_PROPERTY(AmdgpuMaxNumWorkgroupsZ);
+  REMARK_PROPERTY(AmdgpuFlatWorkGroupSizeMin);
+  REMARK_PROPERTY(AmdgpuFlatWorkGroupSizeMax);
+  REMARK_PROPERTY(AmdgpuWavesPerEuMin);
+  REMARK_PROPERTY(AmdgpuWavesPerEuMax);
+  REMARK_PROPERTY(Maxclusterrank);
+  REMARK_PROPERTY(Maxntidx);
   REMARK_PROPERTY(Allocas);
   REMARK_PROPERTY(AllocasStaticSizeSum);
   REMARK_PROPERTY(AllocasDyn);
