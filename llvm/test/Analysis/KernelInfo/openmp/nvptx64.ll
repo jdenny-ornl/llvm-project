@@ -1,7 +1,7 @@
 ; See ./README.md for how to maintain the LLVM IR in this test.
 
 ; RUN: opt %loadkernelinfo -pass-remarks=kernel-info -passes=kernel-info \
-; RUN:     -disable-output %s |& \
+; RUN:     -disable-output %s 2>&1 | \
 ; RUN:   FileCheck -match-full-lines %s
 
 ; For some builds, we see a warning like:

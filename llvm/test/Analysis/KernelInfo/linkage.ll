@@ -1,7 +1,7 @@
 ; Check info on linkage.
 
 ; RUN: opt %loadkernelinfo -pass-remarks=kernel-info -passes=kernel-info \
-; RUN:     -disable-output %s |& \
+; RUN:     -disable-output %s 2>&1 | \
 ; RUN:   FileCheck -match-full-lines %s
 
 target datalayout = "e-i64:64-i128:128-v16:16-v32:32-n16:32:64"
