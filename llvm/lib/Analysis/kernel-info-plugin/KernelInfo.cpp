@@ -102,6 +102,25 @@ static void remarkCall(OptimizationRemarkEmitter &ORE, const Function &Caller,
   });
 }
 
+static void remarkAddrspaceZeroAccess(OptimizationRemarkEmitter &ORE,
+                                      const Function &Caller,
+                                      const Instruction &Inst) {
+  ORE.emit([&] {
+    OptimizationRemark R(DEBUG_TYPE, "AddrspaceZeroAccess", &Inst);
+    R << "in ";
+    identifyFunction(R, Caller);
+    if (const IntrinsicInst *II = dyn_cast<IntrinsicInst>(&Inst)) {
+      R << ", '" << II->getCalledFunction()->getName() << "' call";
+    } else {
+      R << ", '" << Inst.getOpcodeName() << "' instruction";
+    }
+    if (Inst.hasName())
+      R << " ('%" << Inst.getName() << "')";
+    R << " accesses memory in addrspace(0)";
+    return R;
+  });
+}
+
 void KernelInfo::updateForBB(const BasicBlock &BB, int64_t Direction,
                              OptimizationRemarkEmitter &ORE) {
   assert(Direction == 1 || Direction == -1);
@@ -120,7 +139,7 @@ void KernelInfo::updateForBB(const BasicBlock &BB, int64_t Direction,
         AllocasDyn += Direction;
       }
       remarkAlloca(ORE, F, *Alloca, StaticSize);
-    } else if (const auto *Call = dyn_cast<CallBase>(&I)) {
+    } else if (const CallBase *Call = dyn_cast<CallBase>(&I)) {
       std::string CallKind;
       std::string RemarkKind;
       if (Call->isIndirectCall()) {
@@ -150,6 +169,38 @@ void KernelInfo::updateForBB(const BasicBlock &BB, int64_t Direction,
         }
       }
       remarkCall(ORE, F, *Call, CallKind, RemarkKind);
+      if (const AnyMemIntrinsic *MI = dyn_cast<AnyMemIntrinsic>(Call)) {
+        if (MI->getDestAddressSpace() == 0) {
+          AddrspaceZeroAccesses += Direction;
+          remarkAddrspaceZeroAccess(ORE, F, I);
+        } else if (const AnyMemTransferInst *MT =
+                       dyn_cast<AnyMemTransferInst>(MI)) {
+          if (MT->getSourceAddressSpace() == 0) {
+            AddrspaceZeroAccesses += Direction;
+            remarkAddrspaceZeroAccess(ORE, F, I);
+          }
+        }
+      }
+    } else if (const LoadInst *Load = dyn_cast<LoadInst>(&I)) {
+      if (Load->getPointerAddressSpace() == 0) {
+        AddrspaceZeroAccesses += Direction;
+        remarkAddrspaceZeroAccess(ORE, F, I);
+      }
+    } else if (const StoreInst *Store = dyn_cast<StoreInst>(&I)) {
+      if (Store->getPointerAddressSpace() == 0) {
+        AddrspaceZeroAccesses += Direction;
+        remarkAddrspaceZeroAccess(ORE, F, I);
+      }
+    } else if (const AtomicRMWInst *At = dyn_cast<AtomicRMWInst>(&I)) {
+      if (At->getPointerAddressSpace() == 0) {
+        AddrspaceZeroAccesses += Direction;
+        remarkAddrspaceZeroAccess(ORE, F, I);
+      }
+    } else if (const AtomicCmpXchgInst *At = dyn_cast<AtomicCmpXchgInst>(&I)) {
+      if (At->getPointerAddressSpace() == 0) {
+        AddrspaceZeroAccesses += Direction;
+        remarkAddrspaceZeroAccess(ORE, F, I);
+      }
     }
   }
 }
@@ -291,6 +342,7 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
   REMARK_PROPERTY(IndirectCalls);
   REMARK_PROPERTY(DirectCallsToDefinedFunctions);
   REMARK_PROPERTY(Invokes);
+  REMARK_PROPERTY(AddrspaceZeroAccesses);
 #undef REMARK_PROPERTY
 
   return KI;
