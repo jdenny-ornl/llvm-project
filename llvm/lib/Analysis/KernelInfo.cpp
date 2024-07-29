@@ -21,7 +21,6 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
-#include "llvm/Passes/PassPlugin.h"
 
 using namespace llvm;
 
@@ -349,39 +348,3 @@ KernelInfo KernelInfo::getKernelInfo(Function &F,
 }
 
 AnalysisKey KernelInfoAnalysis::Key;
-
-llvm::PassPluginLibraryInfo getKernelInfoPluginInfo() {
-  using namespace llvm;
-  return {
-      LLVM_PLUGIN_API_VERSION, "KernelInfoPrinter", LLVM_VERSION_STRING,
-      [](PassBuilder &PB) {
-        // Enables: AM.getResult<KernelInfoAnalysis>(F)
-        PB.registerAnalysisRegistrationCallback(
-            [](llvm::FunctionAnalysisManager &PM) {
-              PM.registerPass([&] { return KernelInfoAnalysis(); });
-            });
-        // Enables: opt -passes=kernel-info
-        PB.registerPipelineParsingCallback(
-            [&](StringRef Name, FunctionPassManager &FPM,
-                ArrayRef<PassBuilder::PipelineElement>) {
-              if (Name == "kernel-info") {
-                FPM.addPass(KernelInfoPrinter());
-                return true;
-              }
-              return false;
-            });
-        // Insert into pipeline formed by, e.g., opt -passes='default<O1>'.
-        PB.registerScalarOptimizerLateEPCallback(
-            [](llvm::FunctionPassManager &PM, llvm::OptimizationLevel Level) {
-              PM.addPass(KernelInfoPrinter());
-            });
-      }};
-}
-
-// Used when built as dynamic plugin.
-#ifndef LLVM_KERNELINFO_LINK_INTO_TOOLS
-extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo
-llvmGetPassPluginInfo() {
-  return getKernelInfoPluginInfo();
-}
-#endif

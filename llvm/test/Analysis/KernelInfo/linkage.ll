@@ -1,6 +1,6 @@
 ; Check info on linkage.
 
-; RUN: opt %loadkernelinfo -pass-remarks=kernel-info -passes=kernel-info \
+; RUN: opt -pass-remarks=kernel-info -passes=kernel-info \
 ; RUN:     -disable-output %s 2>&1 | \
 ; RUN:   FileCheck -match-full-lines %s
 
