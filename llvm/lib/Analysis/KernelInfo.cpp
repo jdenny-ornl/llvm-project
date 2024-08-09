@@ -86,11 +86,11 @@ static void remarkCall(OptimizationRemarkEmitter &ORE, const Function &Caller,
     R << ", " << CallKind;
     if (const Function *Callee =
             dyn_cast_or_null<Function>(Call.getCalledOperand())) {
-      R << ", callee is ";
+      R << ", callee is";
       StringRef Name = Callee->getName();
       if (auto *SubProgram = Callee->getSubprogram()) {
         if (SubProgram->isArtificial())
-          R << "artificial";
+          R << " artificial";
       }
       if (!Name.empty())
         R << " '" << Name << "'";
