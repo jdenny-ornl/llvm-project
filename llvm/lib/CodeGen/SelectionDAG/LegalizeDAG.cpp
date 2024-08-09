@@ -1474,10 +1474,16 @@ SDValue SelectionDAGLegalize::ExpandInsertToVectorThroughStack(SDValue Op) {
       MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI);
 
   // First store the whole vector.
-  SDValue Ch = DAG.getStore(DAG.getEntryNode(), dl, Vec, StackPtr, PtrInfo);
+  Align BaseVecAlignment =
+      DAG.getMachineFunction().getFrameInfo().getObjectAlign(FI);
+  SDValue Ch = DAG.getStore(DAG.getEntryNode(), dl, Vec, StackPtr, PtrInfo,
+                            BaseVecAlignment);
 
   // Freeze the index so we don't poison the clamping code we're about to emit.
   Idx = DAG.getFreeze(Idx);
+
+  Type *PartTy = PartVT.getTypeForEVT(*DAG.getContext());
+  Align PartAlignment = DAG.getDataLayout().getPrefTypeAlign(PartTy);
 
   // Then store the inserted part.
   if (PartVT.isVector()) {
@@ -1487,7 +1493,8 @@ SDValue SelectionDAGLegalize::ExpandInsertToVectorThroughStack(SDValue Op) {
     // Store the subvector.
     Ch = DAG.getStore(
         Ch, dl, Part, SubStackPtr,
-        MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()));
+        MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()),
+        PartAlignment);
   } else {
     SDValue SubStackPtr =
         TLI.getVectorElementPointer(DAG, StackPtr, VecVT, Idx);
@@ -1496,11 +1503,15 @@ SDValue SelectionDAGLegalize::ExpandInsertToVectorThroughStack(SDValue Op) {
     Ch = DAG.getTruncStore(
         Ch, dl, Part, SubStackPtr,
         MachinePointerInfo::getUnknownStack(DAG.getMachineFunction()),
-        VecVT.getVectorElementType());
+        VecVT.getVectorElementType(), PartAlignment);
   }
 
+  assert(cast<StoreSDNode>(Ch)->getAlign() == PartAlignment &&
+         "ElementAlignment does not match!");
+
   // Finally, load the updated vector.
-  return DAG.getLoad(Op.getValueType(), dl, Ch, StackPtr, PtrInfo);
+  return DAG.getLoad(Op.getValueType(), dl, Ch, StackPtr, PtrInfo,
+                     BaseVecAlignment);
 }
 
 SDValue SelectionDAGLegalize::ExpandVectorBuildThroughStack(SDNode* Node) {
@@ -3439,6 +3450,16 @@ bool SelectionDAGLegalize::ExpandNode(SDNode *Node) {
   case ISD::FP_TO_UINT_SAT:
     Results.push_back(TLI.expandFP_TO_INT_SAT(Node, DAG));
     break;
+  case ISD::LROUND:
+  case ISD::LLROUND: {
+    SDValue Arg = Node->getOperand(0);
+    EVT ArgVT = Arg.getValueType();
+    EVT ResVT = Node->getValueType(0);
+    SDLoc dl(Node);
+    SDValue RoundNode = DAG.getNode(ISD::FROUND, dl, ArgVT, Arg);
+    Results.push_back(DAG.getNode(ISD::FP_TO_SINT, dl, ResVT, RoundNode));
+    break;
+  }
   case ISD::VAARG:
     Results.push_back(DAG.expandVAArg(Node));
     Results.push_back(Results[0].getValue(1));
@@ -4326,6 +4347,16 @@ bool SelectionDAGLegalize::ExpandNode(SDNode *Node) {
     // targets where it is not needed.
     Results.push_back(Node->getOperand(0));
     break;
+  case ISD::LRINT:
+  case ISD::LLRINT: {
+    SDValue Arg = Node->getOperand(0);
+    EVT ArgVT = Arg.getValueType();
+    EVT ResVT = Node->getValueType(0);
+    SDLoc dl(Node);
+    SDValue RoundNode = DAG.getNode(ISD::FRINT, dl, ArgVT, Arg);
+    Results.push_back(DAG.getNode(ISD::FP_TO_SINT, dl, ResVT, RoundNode));
+    break;
+  }
   case ISD::GLOBAL_OFFSET_TABLE:
   case ISD::GlobalAddress:
   case ISD::GlobalTLSAddress:
