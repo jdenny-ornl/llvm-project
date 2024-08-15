@@ -32,6 +32,12 @@ extern "C" {
 // API for lowering assignment
 void RTDECL(Assign)(Descriptor &to, const Descriptor &from,
     const char *sourceFile = nullptr, int sourceLine = 0);
+// Like RTDECL(Assign) except, to improve run-time performance, the compiler
+// already checked most conditions for calling std::memmove.
+// RTDECL(AssignSimple) checks a few remaining conditions and calls
+// RTDECL(Assign) instead of std::memmove if they are not met.
+void RTDECL(AssignSimple)(Descriptor &to, const Descriptor &from,
+    const char *sourceFile = nullptr, int sourceLine = 0);
 // This variant has no finalization, defined assignment, or allocatable
 // reallocation.
 void RTDECL(AssignTemporary)(Descriptor &to, const Descriptor &from,

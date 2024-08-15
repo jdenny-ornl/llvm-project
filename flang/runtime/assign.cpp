@@ -565,6 +565,26 @@ void RTDEF(Assign)(Descriptor &to, const Descriptor &from,
       MaybeReallocate | NeedFinalization | ComponentCanBeDefinedAssignment);
 }
 
+void RTDEF(AssignSimple)(Descriptor &to, const Descriptor &from,
+    const char *sourceFile, int sourceLine) {
+  if (!to.IsContiguous() || !from.IsContiguous()) {
+    RTNAME(Assign)(to, from, sourceFile, sourceLine);
+    return;
+  }
+  std::size_t toElements{to.Elements()};
+  // FIXME: This check is not performed by the compiler but is performed by
+  // RTDEF(Assign).  Skipping it improves performance.  Is it ok to treat it as
+  // a precondition (thus trade a crash for misbehavior when violated)?
+  //if (from.rank() > 0 && toElements != from.Elements()) {
+  //  Terminator terminator{sourceFile, sourceLine};
+  //  terminator.Crash("Assign: mismatching element counts in array assignment "
+  //                   "(to %zd, from %zd)",
+  //      toElements, from.Elements());
+  //}
+  Fortran::runtime::memmove(to.raw().base_addr, from.raw().base_addr,
+                            toElements * to.ElementBytes());
+}
+
 void RTDEF(AssignTemporary)(Descriptor &to, const Descriptor &from,
     const char *sourceFile, int sourceLine) {
   Terminator terminator{sourceFile, sourceLine};

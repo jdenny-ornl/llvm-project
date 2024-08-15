@@ -139,6 +139,10 @@ public:
       builder.create<fir::StoreOp>(loc, to, toMutableBox);
       if (assignOp.isTemporaryLHS())
         fir::runtime::genAssignTemporary(builder, loc, toMutableBox, from);
+      else if (!lhs.isAllocatable() && lhs.getRank() == rhs.getRank() &&
+               lhs.getFortranElementType() == rhs.getFortranElementType() &&
+               !mlir::isa<fir::RecordType>(lhs.getFortranElementType()))
+        fir::runtime::genAssignSimple(builder, loc, toMutableBox, from);
       else
         fir::runtime::genAssign(builder, loc, toMutableBox, from);
     } else {
