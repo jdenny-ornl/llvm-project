@@ -125,10 +125,6 @@
 ; RUN: not %{run-v}
 ; RUN: not %{run}
 
-; Verbose diagnostics are suppressed but not errors.
-; CHK:{{.*}}error:{{.*}}
-; CHK:{{.*}}possible intended match here{{.*}}
-
 ;        CHK:<<<<<<
 ;   CHK-NEXT:              1: hello 
 ; CHK-V-NEXT:check:1          ^~~~~
@@ -159,9 +155,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; CNT:{{.*}}error:{{.*}}
 
 ;      CNT-V:<<<<<<
 ; CNT-V-NEXT:              1: pete 
@@ -209,9 +202,6 @@
 ; RUN: not %{run-v}
 ; RUN: not %{run}
 
-; Verbose diagnostics are suppressed but not errors.
-; NXT:{{.*}}error:{{.*}}
-
 ;        NXT:<<<<<<
 ;   NXT-NEXT:              1: hello 
 ; NXT-V-NEXT:check:1          ^~~~~
@@ -233,9 +223,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; NXT2:{{.*}}error:{{.*}}
 
 ;        NXT2:<<<<<<
 ;   NXT2-NEXT:              1: hello 
@@ -269,9 +256,6 @@
 ; RUN: not %{run-v}
 ; RUN: not %{run}
 
-; Verbose diagnostics are suppressed but not errors.
-; SAM:{{.*}}error:{{.*}}
-
 ;        SAM:<<<<<<
 ;   SAM-NEXT:              1: hello world! 
 ; SAM-V-NEXT:check:1          ^~~~~
@@ -291,9 +275,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; SAM2:{{.*}}error:{{.*}}
 
 ;        SAM2:<<<<<<
 ;   SAM2-NEXT:              1: hello world! 
@@ -335,9 +316,6 @@
 ; RUN: not %{run-v}
 ; RUN: not %{run}
 
-; Verbose diagnostics are suppressed but not errors.
-; EMP:{{.*}}error:{{.*}}
-
 ;        EMP:<<<<<<
 ;   EMP-NEXT:              1: hello 
 ; EMP-V-NEXT:check:1          ^~~~~
@@ -366,9 +344,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; EMP2:{{.*}}error:{{.*}}
 
 ; TODO: The search range of CHECK-EMPTY logically ends at the last character of
 ; the file, as show below.  However, it can actually match the empty string
@@ -411,9 +386,6 @@
 ; RUN: not %{run-v}
 ; RUN: not %{run}
 
-; Verbose diagnostics are suppressed but not errors.
-; NOT:{{.*}}error:{{.*}}
-
 ;         NOT:<<<<<<
 ;    NOT-NEXT:              1: hello 
 ; NOT-VV-NEXT:not:1'0         {        search range start (exclusive)
@@ -438,9 +410,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; NOT2:{{.*}}error:{{.*}}
 
 ;         NOT2:<<<<<<
 ;    NOT2-NEXT:              1: hello 
@@ -476,9 +445,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; DAG:{{.*}}error:{{.*}}
 
 ;      DAG-VV:<<<<<<
 ; DAG-VV-NEXT:              1: abc 
@@ -541,9 +507,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; DAG1L:{{.*}}error:{{.*}}
 
 ;      DAG1L-VV:<<<<<<
 ; DAG1L-VV-NEXT:              1: abc def abc def 
@@ -634,11 +597,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; LAB:{{.*}}.chk:3:8: error: CHECK: expected string not found in input
-; LAB:{{.*}}.chk:6:14: error: CHECK-LABEL: expected string not found in input
-; LAB:{{.*}}.chk:9:12: error: CHECK-NOT: excluded string found in input
 
 ;       LAB-V:<<<<<<
 ;  LAB-V-NEXT:              1: text 
@@ -741,9 +699,6 @@
 ; RUN: not %{run}
 ; REDEFINE: %{opts} =
 
-; Verbose diagnostics are suppressed but not errors.
-; IMPNOT:{{.*}}command line:1:22: error: IMPLICIT-CHECK-NOT: excluded string found in input
-
 ;      IMPNOT-VV:<<<<<<
 ; IMPNOT-VV-NEXT:              1: hello world again! 
 ; IMPNOT-VV-NEXT:check:1          ^~~
@@ -801,10 +756,6 @@
 ; RUN: not %{run}
 ; REDEFINE: %{opts} =
 
-; Verbose diagnostics are suppressed but not errors.
-; SUBST-POS:{{.*}}error:{{.*}}
-; SUBST-POS:{{.*}}possible intended match here{{.*}}
-
 ;        SUBST-POS:<<<<<<
 ;   SUBST-POS-NEXT:              1: def-match1 def-match2 
 ; SUBST-POS-V-NEXT:check:1'0        ^~~~~~~~~~~~~~~~~~~~~
@@ -842,9 +793,6 @@
 ; RUN: not %{run-v}
 ; RUN: not %{run}
 ; REDEFINE: %{opts} =
-
-; Verbose diagnostics are suppressed but not errors.
-; SUBST-NEG-COUNT-2:{{.*}}error:{{.*}}
 
 ;        SUBST-NEG:<<<<<<
 ;   SUBST-NEG-NEXT:              1: def-match1 def-nomatch 
@@ -895,9 +843,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; CAPTURE-NEG:{{.*}}error:{{.*}}
 
 ;        CAPTURE-NEG:<<<<<<
 ;   CAPTURE-NEG-NEXT:              1: strvar: foo 
@@ -953,9 +898,6 @@
 ; RUN: not %{run}
 ; REDEFINE: %{opts} =
 
-; Verbose diagnostics are suppressed but not errors.
-; SUBST_NEXT:{{.*}}error:{{.*}}
-
 ;        SUBST_NEXT:<<<<<<
 ;   SUBST_NEXT-NEXT:              1: pre var 
 ; SUBST_NEXT-V-NEXT:check:1          ^~~
@@ -982,9 +924,6 @@
 ; RUN: not %{run-v}
 ; RUN: not %{run}
 ; REDEFINE: %{opts} =
-
-; Verbose diagnostics are suppressed but not errors.
-; SUBST_SAME:{{.*}}error:{{.*}}
 
 ;      SUBST_SAME-V:<<<<<<
 ; SUBST_SAME-V-NEXT:              1: pre 
@@ -1140,9 +1079,6 @@
 ; RUN: not %{run-v}
 ; RUN: not %{run}
 
-; Verbose diagnostics are suppressed but not errors.
-; POS-SEARCH-EMPTY-FILE:{{.*}}error:{{.*}}
-
 ;      POS-SEARCH-EMPTY-FILE:<<<<<<
 ; POS-SEARCH-EMPTY-FILE-NEXT:              1: 
 ; POS-SEARCH-EMPTY-FILE-NEXT:check:1'0       {} search range (exclusive bounds)
@@ -1182,9 +1118,6 @@
 ; RUN: not %{run-vv}
 ; RUN: not %{run-v}
 ; RUN: not %{run}
-
-; Verbose diagnostics are suppressed but not errors.
-; SEARCH-BOF-EOF-MULTI-LINE:{{.*}}error:{{.*}}
 
 ;      SEARCH-BOF-EOF-MULTI-LINE:<<<<<<
 ; SEARCH-BOF-EOF-MULTI-LINE-NEXT:              1: line 1 

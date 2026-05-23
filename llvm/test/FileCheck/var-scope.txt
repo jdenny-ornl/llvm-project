@@ -6,12 +6,21 @@
 RUN: FileCheck --check-prefixes CHECK,CHECK-LOCAL-BOTH,CHECK-GLOBAL --input-file %s %s
 
 RUN: FileCheck --check-prefixes CHECK,CHECK-GLOBAL --enable-var-scope --input-file %s %s
-RUN: %ProtectFileCheckOutput not FileCheck --check-prefixes CHECK,CHECK-LOCAL-TEXT --enable-var-scope --input-file %s %s 2>&1 \
-RUN:   | FileCheck --implicit-check-not "undefined variable:" --check-prefixes ERRUNDEF,ERRUNDEF-LOCAL %s
-RUN: %ProtectFileCheckOutput not FileCheck --check-prefixes CHECK,CHECK-LOCAL-NUM --enable-var-scope --input-file %s %s 2>&1 \
-RUN:   | FileCheck --implicit-check-not "undefined variable:" --check-prefixes ERRUNDEF,ERRUNDEF-LOCNUM %s
-RUN: %ProtectFileCheckOutput not FileCheck --check-prefixes CHECK,CHECK-LOCAL-BOTH --enable-var-scope --input-file %s %s 2>&1 \
-RUN:   | FileCheck --implicit-check-not "undefined variable:" --check-prefixes ERRUNDEF,ERRUNDEF-LOCAL,ERRUNDEF-LOCNUM %s
+RUN: %ProtectFileCheckOutput \
+RUN: not FileCheck -dump-input=never --check-prefixes CHECK,CHECK-LOCAL-TEXT \
+RUN:               --enable-var-scope --input-file %s %s 2>&1 | \
+RUN:   FileCheck --implicit-check-not "undefined variable:" \
+RUN:             --check-prefixes ERRUNDEF-LOCAL %s
+RUN: %ProtectFileCheckOutput \
+RUN: not FileCheck -dump-input=never --check-prefixes CHECK,CHECK-LOCAL-NUM \
+RUN:               --enable-var-scope --input-file %s %s 2>&1 | \
+RUN:   FileCheck --implicit-check-not "undefined variable:" \
+RUN:             --check-prefixes ERRUNDEF-LOCNUM %s
+RUN: %ProtectFileCheckOutput \
+RUN: not FileCheck -dump-input=never --check-prefixes CHECK,CHECK-LOCAL-BOTH \
+RUN:               --enable-var-scope --input-file %s %s 2>&1 | \
+RUN:   FileCheck --implicit-check-not "undefined variable:" \
+RUN:             --check-prefixes ERRUNDEF-LOCAL,ERRUNDEF-LOCNUM %s
 
 local1
 global1
@@ -61,9 +70,3 @@ ERRUNDEF-LOCAL: undefined variable: LOCAL
 ERRUNDEF-LOCNUM: undefined variable: LOCNUM
 ERRUNDEF-LOCAL: undefined variable: LOCAL
 ERRUNDEF-LOCNUM: undefined variable: LOCNUM
-
-// Look for "Input was:" to only match the error messages before the input-context.
-//
-// The regex /([[:space:]]|.)*/ matches all remaining characters,
-// to avoid fails due to --implicit-check-not
-ERRUNDEF: {{^Input was:([[:space:]]|.)*}}

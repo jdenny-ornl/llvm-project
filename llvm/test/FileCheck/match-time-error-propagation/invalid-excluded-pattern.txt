@@ -61,14 +61,14 @@ RUN: | FileCheck %s -match-full-lines -check-prefixes=ERR,ERR-VV
 RUN: %ProtectFileCheckOutput \
 RUN: not FileCheck -dump-input=fail %t.chk < %t.in 2>&1 | \
 RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.chk \
-RUN:             -check-prefixes=ERR,DUMP
+RUN:             -check-prefixes=DUMP
 
 RUN: %ProtectFileCheckOutput \
 RUN: not FileCheck -dump-input=fail -v %t.chk < %t.in 2>&1 | \
 RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.chk \
-RUN:             -check-prefixes=ERR,DUMP
+RUN:             -check-prefixes=DUMP
 
 RUN: %ProtectFileCheckOutput \
 RUN: not FileCheck -dump-input=fail -vv %t.chk < %t.in 2>&1 | \
 RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.chk \
-RUN:             -check-prefixes=ERR,DUMP,DUMP-VV
+RUN:             -check-prefixes=DUMP,DUMP-VV
