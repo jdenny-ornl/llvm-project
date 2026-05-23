@@ -7,8 +7,9 @@
 // RUN: | FileCheck -check-prefix=EMPTY-ERR %s
 //
 // RUN: %ProtectFileCheckOutput \
-// RUN: not FileCheck -check-prefix=FOO -allow-empty %s </dev/null 2>&1 \
-// RUN: | FileCheck -check-prefix=NO-EMPTY-ERR -check-prefix=NOT-FOUND %s
+// RUN: not FileCheck -dump-input=never -check-prefix=FOO -allow-empty %s \
+// RUN:               </dev/null 2>&1 | \
+// RUN:   FileCheck -check-prefix=NO-EMPTY-ERR -check-prefix=NOT-FOUND %s
 //
 // RUN: %ProtectFileCheckOutput \
 // RUN: FileCheck -check-prefix=NOFOO -allow-empty %s </dev/null 2>&1 \

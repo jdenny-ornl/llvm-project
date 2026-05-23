@@ -26,10 +26,10 @@ REDEFINE: %{opts} = -dump-input=never -vv
 RUN: %{run} ERR,ERR-VV
 
 REDEFINE: %{opts} = -dump-input=always
-RUN: %{run} ERR,DMP
+RUN: %{run} DMP
 
 REDEFINE: %{opts} = -dump-input=always -vv
-RUN: %{run} ERR,DMP,DMP-VV
+RUN: %{run} DMP,DMP-VV
 
     ERR-NOT:{{.}}
      ERR-VV:{{.*}}/check.txt:1:9: remark: CHECK: expected string found in input

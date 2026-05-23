@@ -8,9 +8,11 @@
 
 ; Run without and with -color.  In the former case, FileCheck should suppress
 ; color in its diagnostics because stderr is a file.
-; RUN: %ProtectFileCheckOutput not FileCheck %s < %t.in 2>&1 | \
+; RUN: %ProtectFileCheckOutput \
+; RUN: not FileCheck -dump-input=never %s < %t.in 2>&1 | \
 ; RUN:   %{reveal-ansi-escapes} > %t.no-color
-; RUN: %ProtectFileCheckOutput not FileCheck -color %s < %t.in 2>&1 | \
+; RUN: %ProtectFileCheckOutput \
+; RUN: not FileCheck -dump-input=never -color %s < %t.in 2>&1 | \
 ; RUN:   %{reveal-ansi-escapes} > %t.color
 
 ; Check whether color was produced.

@@ -1329,8 +1329,7 @@ int main(int argc, char **argv) {
                      : 1;
   if (DumpInput == DumpInputAlways ||
       (ExitCode == 1 && DumpInput == DumpInputFail)) {
-    errs() << "\n"
-           << "Input file: " << InputFilename << "\n"
+    errs() << "Input file: " << InputFilename << "\n"
            << "Check file: " << CheckFilename << "\n"
            << "\n"
            << "-dump-input=help explains the following input dump.\n"
