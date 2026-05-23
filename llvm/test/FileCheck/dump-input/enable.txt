@@ -89,7 +89,7 @@ BADVAL:{{F|f}}ile{{C|c}}heck{{.*}}: for the --dump-input option: Cannot find opt
 ; RUN: not FileCheck -input-file %t.err %t.check -check-prefix=CHECK \
 ; RUN:               -match-full-lines -v 2>&1 | \
 ; RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.check \
-; RUN:                -check-prefixes=NOTRACE,ERR,DUMP-ERR,DUMP-ERR-V
+; RUN:                -check-prefixes=NOTRACE,DUMP-ERR,DUMP-ERR-V
 
 ;--------------------------------------------------
 ; Check -dump-input=fail.
@@ -109,7 +109,7 @@ BADVAL:{{F|f}}ile{{C|c}}heck{{.*}}: for the --dump-input option: Cannot find opt
 ; RUN: not FileCheck -input-file %t.err %t.check -check-prefix=CHECK \
 ; RUN:               -match-full-lines -dump-input=fail 2>&1 | \
 ; RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.check \
-; RUN:             -check-prefixes=NOTRACE,ERR,DUMP-ERR
+; RUN:             -check-prefixes=NOTRACE,DUMP-ERR
 
 ; FileCheck success, -v => no dump, no trace.
 ; RUN: %ProtectFileCheckOutput \
@@ -123,7 +123,7 @@ BADVAL:{{F|f}}ile{{C|c}}heck{{.*}}: for the --dump-input option: Cannot find opt
 ; RUN: not FileCheck -input-file %t.err %t.check -check-prefix=CHECK \
 ; RUN:               -match-full-lines -dump-input=fail -v 2>&1 | \
 ; RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.check \
-; RUN:                -check-prefixes=NOTRACE,ERR,DUMP-ERR,DUMP-ERR-V
+; RUN:                -check-prefixes=NOTRACE,DUMP-ERR,DUMP-ERR-V
 
 ;--------------------------------------------------
 ; Check -dump-input=always.
@@ -140,7 +140,7 @@ BADVAL:{{F|f}}ile{{C|c}}heck{{.*}}: for the --dump-input option: Cannot find opt
 ; RUN: not FileCheck -input-file %t.err %t.check -check-prefix=CHECK \
 ; RUN:               -match-full-lines -dump-input=always -v 2>&1 | \
 ; RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.check \
-; RUN:                -check-prefixes=NOTRACE,ERR,DUMP-ERR,DUMP-ERR-V
+; RUN:                -check-prefixes=NOTRACE,DUMP-ERR,DUMP-ERR-V
 
 ;--------------------------------------------------
 ; Check multiple -dump-input options.
@@ -163,7 +163,7 @@ BADVAL:{{F|f}}ile{{C|c}}heck{{.*}}: for the --dump-input option: Cannot find opt
 ; RUN:               -match-full-lines -dump-input=fail -dump-input=fail -v \
 ; RUN:               2>&1 | \
 ; RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.check \
-; RUN:                -check-prefixes=NOTRACE,ERR,DUMP-ERR,DUMP-ERR-V
+; RUN:                -check-prefixes=NOTRACE,DUMP-ERR,DUMP-ERR-V
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - -
 ; Check precedence.
@@ -188,7 +188,7 @@ BADVAL:{{F|f}}ile{{C|c}}heck{{.*}}: for the --dump-input option: Cannot find opt
 ; RUN:               -match-full-lines -dump-input=fail -dump-input=never -v \
 ; RUN:               2>&1 | \
 ; RUN:   FileCheck %s -match-full-lines -DCHK_FILE=%t.check \
-; RUN:                -check-prefixes=NOTRACE,ERR,DUMP-ERR,DUMP-ERR-V
+; RUN:                -check-prefixes=NOTRACE,DUMP-ERR,DUMP-ERR-V
 
 ;- - - - - - - - - - - - - - - - - - - - - - - - -
 ; Check that order doesn't matter.
@@ -231,8 +231,6 @@ BADVAL:{{F|f}}ile{{C|c}}heck{{.*}}: for the --dump-input option: Cannot find opt
 ; Trace is sometimes suppressed.
 ;       TRACE:{{.*}}remark:{{.*}}
 ; NOTRACE-NOT:remark:
-
-; Error diagnostics are never suppressed.
 ; ERR:{{.*}}error:{{.*}}
 
 ; NODUMP-NOT:<<<<<<

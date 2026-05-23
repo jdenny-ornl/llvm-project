@@ -874,11 +874,13 @@ struct FileCheckString {
                FileCheckDiagList *Diags) const;
 
   /// Verifies that there is a single line in the given \p Buffer. Errors are
-  /// reported against \p SM.
-  bool CheckNext(const SourceMgr &SM, StringRef Buffer) const;
+  /// reported against \p SM if \p PrintDiag.
+  bool CheckNext(const SourceMgr &SM, StringRef Buffer,
+                 bool PrintDiags = true) const;
   /// Verifies that there is no newline in the given \p Buffer. Errors are
-  /// reported against \p SM.
-  bool CheckSame(const SourceMgr &SM, StringRef Buffer) const;
+  /// reported against \p SM if \p PrintDiag.
+  bool CheckSame(const SourceMgr &SM, StringRef Buffer,
+                 bool PrintDiags = true) const;
   /// Verifies that none of the strings in \p NotStrings are found in the given
   /// \p Buffer. Errors are reported against \p SM and diagnostics recorded in
   /// \p Diags according to the verbosity level set in \p Req.

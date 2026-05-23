@@ -1415,10 +1415,12 @@ void Pattern::printFuzzyMatch(const SourceMgr &SM, StringRef Buffer,
   // line.
   if (Best && Best != StringRef::npos && BestQuality < 50) {
     SMLoc MatchStart = SMLoc::getFromPointer(Buffer.data() + Best);
-    if (Diags)
+    if (Diags) {
       Diags->emplace<MatchFuzzyDiag>(MatchStart);
-    SM.PrintMessage(MatchStart, SourceMgr::DK_Note,
-                    "possible intended match here");
+    } else {
+      SM.PrintMessage(MatchStart, SourceMgr::DK_Note,
+                      "possible intended match here");
+    }
 
     // FIXME: If we wanted to be really friendly we would show why the match
     // failed, as it can be hard to spot simple one character differences.
@@ -2033,61 +2035,56 @@ static Error printMatch(bool ExpectedMatch, const SourceMgr &SM,
                         const FileCheckRequest &Req, FileCheckDiagList *Diags) {
   // Suppress some verbosity if there's no error.
   bool HasError = !ExpectedMatch || MatchResult.TheError;
-  bool PrintDiag = true;
   if (!HasError) {
     if (!Req.Verbose)
       return ErrorReported::reportedOrSuccess(HasError);
     if (!Req.VerboseVerbose && Pat.getCheckTy() == Check::CheckEOF)
       return ErrorReported::reportedOrSuccess(HasError);
-    // Due to their verbosity, we don't print verbose diagnostics here if we're
-    // gathering them for Diags to be rendered elsewhere, but we always print
-    // other diagnostics.
-    PrintDiag = !Diags;
   }
 
   // Add "found" diagnostic, substitutions, and variable definitions to Diags.
-  MatchFoundDiag::StatusTy Status =
-      ExpectedMatch ? MatchFoundDiag::Success : MatchFoundDiag::Excluded;
   SMRange MatchRange = buildMatchRange(Buffer, MatchResult.TheMatch->Pos,
                                        MatchResult.TheMatch->Len);
-  SMRange SearchRange = buildSearchRange(Buffer);
   if (Diags) {
+    SMRange SearchRange = buildSearchRange(Buffer);
+    MatchFoundDiag::StatusTy Status =
+        ExpectedMatch ? MatchFoundDiag::Success : MatchFoundDiag::Excluded;
     Diags->emplace<MatchFoundDiag>(Pat.getCheckTy(), Loc, Status, MatchRange,
                                    SearchRange);
     Pat.printSubstitutions(SM, Buffer, MatchRange, Diags);
     Pat.printVariableDefs(SM, Diags);
-  }
-  if (!PrintDiag) {
-    assert(!HasError && "expected to report more diagnostics for error");
-    return ErrorReported::reportedOrSuccess(HasError);
-  }
+  } else {
+    // Print the match.
+    std::string Message = formatv("{0}: {1} string found in input",
+                                  Pat.getCheckTy().getDescription(Prefix),
+                                  (ExpectedMatch ? "expected" : "excluded"))
+                              .str();
+    if (Pat.getCount() > 1)
+      Message +=
+          formatv(" ({0} out of {1})", MatchedCount, Pat.getCount()).str();
+    SM.PrintMessage(Loc,
+                    ExpectedMatch ? SourceMgr::DK_Remark : SourceMgr::DK_Error,
+                    Message);
+    SM.PrintMessage(MatchRange.Start, SourceMgr::DK_Note, "found here",
+                    {MatchRange});
 
-  // Print the match.
-  std::string Message = formatv("{0}: {1} string found in input",
-                                Pat.getCheckTy().getDescription(Prefix),
-                                (ExpectedMatch ? "expected" : "excluded"))
-                            .str();
-  if (Pat.getCount() > 1)
-    Message += formatv(" ({0} out of {1})", MatchedCount, Pat.getCount()).str();
-  SM.PrintMessage(
-      Loc, ExpectedMatch ? SourceMgr::DK_Remark : SourceMgr::DK_Error, Message);
-  SM.PrintMessage(MatchRange.Start, SourceMgr::DK_Note, "found here",
-                  {MatchRange});
-
-  // Print additional information, which can be useful even if there are errors.
-  Pat.printSubstitutions(SM, Buffer, MatchRange, nullptr);
-  Pat.printVariableDefs(SM, nullptr);
+    // Print additional information, which can be useful even if there are
+    // errors.
+    Pat.printSubstitutions(SM, Buffer, MatchRange, nullptr);
+    Pat.printVariableDefs(SM, nullptr);
+  }
 
   // Print errors and add them to Diags.  We report these errors after the match
   // itself because we found them after the match.  If we had found them before
   // the match, we'd be in printNoMatch.
   handleAllErrors(std::move(MatchResult.TheError),
                   [&](const ErrorDiagnostic &E) {
-                    E.log(errs());
                     if (Diags) {
                       Diags->emplace<MatchCustomNoteDiag>(E.getRange(),
                                                           E.getMessage().str(),
                                                           /*AddsError=*/true);
+                    } else {
+                      E.log(errs());
                     }
                   });
   return ErrorReported::reportedOrSuccess(HasError);
@@ -2111,23 +2108,17 @@ static Error printNoMatch(bool ExpectedMatch, const SourceMgr &SM,
       [&](const ErrorDiagnostic &E) {
         HasError = HasPatternError = true;
         Status = MatchNoneDiag::InvalidPattern;
-        E.log(errs());
         if (Diags)
           ErrorMsgs.push_back(E.getMessage().str());
+        else
+          E.log(errs());
       },
       // NotFoundError is why printNoMatch was invoked.
       [](const NotFoundError &E) {});
 
   // Suppress some verbosity if there's no error.
-  bool PrintDiag = true;
-  if (!HasError) {
-    if (!VerboseVerbose)
-      return ErrorReported::reportedOrSuccess(HasError);
-    // Due to their verbosity, we don't print verbose diagnostics here if we're
-    // gathering them for Diags to be rendered elsewhere, but we always print
-    // other diagnostics.
-    PrintDiag = !Diags;
-  }
+  if (!HasError && !VerboseVerbose)
+    return ErrorReported::reportedOrSuccess(HasError);
 
   // Add "not found" diagnostic, substitutions, and pattern errors to Diags.
   //
@@ -2143,33 +2134,30 @@ static Error printNoMatch(bool ExpectedMatch, const SourceMgr &SM,
       Diags->emplace<MatchCustomNoteDiag>(ErrorMsg);
     Pat.printSubstitutions(SM, Buffer, SearchRange, Diags);
     Pat.printVariableDefAttempts(SM, Buffer, Diags);
-  }
-  if (!PrintDiag) {
-    assert(!HasError && "expected to report more diagnostics for error");
-    return ErrorReported::reportedOrSuccess(HasError);
-  }
+  } else {
+    // Print "not found" diagnostic, except that's implied if we already printed
+    // a pattern error.
+    if (!HasPatternError) {
+      std::string Message = formatv("{0}: {1} string not found in input",
+                                    Pat.getCheckTy().getDescription(Prefix),
+                                    (ExpectedMatch ? "expected" : "excluded"))
+                                .str();
+      if (Pat.getCount() > 1) {
+        Message +=
+            formatv(" ({0} out of {1})", MatchedCount, Pat.getCount()).str();
+      }
+      SM.PrintMessage(
+          Loc, ExpectedMatch ? SourceMgr::DK_Error : SourceMgr::DK_Remark,
+          Message);
+      SM.PrintMessage(SearchRange.Start, SourceMgr::DK_Note,
+                      "scanning from here");
+    }
 
-  // Print "not found" diagnostic, except that's implied if we already printed a
-  // pattern error.
-  if (!HasPatternError) {
-    std::string Message = formatv("{0}: {1} string not found in input",
-                                  Pat.getCheckTy().getDescription(Prefix),
-                                  (ExpectedMatch ? "expected" : "excluded"))
-                              .str();
-    if (Pat.getCount() > 1)
-      Message +=
-          formatv(" ({0} out of {1})", MatchedCount, Pat.getCount()).str();
-    SM.PrintMessage(Loc,
-                    ExpectedMatch ? SourceMgr::DK_Error : SourceMgr::DK_Remark,
-                    Message);
-    SM.PrintMessage(SearchRange.Start, SourceMgr::DK_Note,
-                    "scanning from here");
+    // Print additional information, which can be useful even after a pattern
+    // error.
+    Pat.printSubstitutions(SM, Buffer, SearchRange, nullptr);
+    Pat.printVariableDefAttempts(SM, Buffer, nullptr);
   }
-
-  // Print additional information, which can be useful even after a pattern
-  // error.
-  Pat.printSubstitutions(SM, Buffer, SearchRange, nullptr);
-  Pat.printVariableDefAttempts(SM, Buffer, nullptr);
 
   if (ExpectedMatch)
     Pat.printFuzzyMatch(SM, Buffer, Diags);
@@ -2269,25 +2257,11 @@ size_t FileCheckString::Check(const SourceMgr &SM, StringRef Buffer,
     StringRef MatchBuffer = Buffer.substr(LastPos);
     StringRef SkippedRegion = Buffer.substr(LastPos, MatchPos);
 
-    // If this check is a "CHECK-NEXT", verify that the previous match was on
-    // the previous line (i.e. that there is one newline between them).
-    if (CheckNext(SM, SkippedRegion)) {
-      if (Diags) {
-        if (Req.Verbose) {
-          Diags->adjustPrevMatchFoundDiag(MatchFoundDiag::WrongLine);
-        } else {
-          Diags->emplace<MatchFoundDiag>(
-              Pat.getCheckTy(), Loc, MatchFoundDiag::WrongLine,
-              buildMatchRange(MatchBuffer, MatchPos, MatchLen),
-              buildSearchRange(MatchBuffer));
-        }
-      }
-      return StringRef::npos;
-    }
-
-    // If this check is a "CHECK-SAME", verify that the previous match was on
-    // the same line (i.e. that there is no newline between them).
-    if (CheckSame(SM, SkippedRegion)) {
+    // If this check is a "CHECK-NEXT"/"CHECK-SAME", verify that the previous
+    // match was on the previous/same line (i.e. that there is one/no newline
+    // between them).
+    if (CheckNext(SM, SkippedRegion, !Diags) ||
+        CheckSame(SM, SkippedRegion, !Diags)) {
       if (Diags) {
         if (Req.Verbose) {
           Diags->adjustPrevMatchFoundDiag(MatchFoundDiag::WrongLine);
@@ -2310,7 +2284,8 @@ size_t FileCheckString::Check(const SourceMgr &SM, StringRef Buffer,
   return FirstMatchPos;
 }
 
-bool FileCheckString::CheckNext(const SourceMgr &SM, StringRef Buffer) const {
+bool FileCheckString::CheckNext(const SourceMgr &SM, StringRef Buffer,
+                                bool PrintDiags) const {
   if (Pat.getCheckTy() != Check::CheckNext &&
       Pat.getCheckTy() != Check::CheckEmpty)
     return false;
@@ -2324,32 +2299,37 @@ bool FileCheckString::CheckNext(const SourceMgr &SM, StringRef Buffer) const {
   unsigned NumNewLines = CountNumNewlinesBetween(Buffer, FirstNewLine);
 
   if (NumNewLines == 0) {
-    SM.PrintMessage(Loc, SourceMgr::DK_Error,
-                    CheckName + ": is on the same line as previous match");
-    SM.PrintMessage(SMLoc::getFromPointer(Buffer.end()), SourceMgr::DK_Note,
-                    "'next' match was here");
-    SM.PrintMessage(SMLoc::getFromPointer(Buffer.data()), SourceMgr::DK_Note,
-                    "previous match ended here");
+    if (PrintDiags) {
+      SM.PrintMessage(Loc, SourceMgr::DK_Error,
+                      CheckName + ": is on the same line as previous match");
+      SM.PrintMessage(SMLoc::getFromPointer(Buffer.end()), SourceMgr::DK_Note,
+                      "'next' match was here");
+      SM.PrintMessage(SMLoc::getFromPointer(Buffer.data()), SourceMgr::DK_Note,
+                      "previous match ended here");
+    }
     return true;
   }
 
   if (NumNewLines != 1) {
-    SM.PrintMessage(Loc, SourceMgr::DK_Error,
-                    CheckName +
-                        ": is not on the line after the previous match");
-    SM.PrintMessage(SMLoc::getFromPointer(Buffer.end()), SourceMgr::DK_Note,
-                    "'next' match was here");
-    SM.PrintMessage(SMLoc::getFromPointer(Buffer.data()), SourceMgr::DK_Note,
-                    "previous match ended here");
-    SM.PrintMessage(SMLoc::getFromPointer(FirstNewLine), SourceMgr::DK_Note,
-                    "non-matching line after previous match is here");
+    if (PrintDiags) {
+      SM.PrintMessage(Loc, SourceMgr::DK_Error,
+                      CheckName +
+                          ": is not on the line after the previous match");
+      SM.PrintMessage(SMLoc::getFromPointer(Buffer.end()), SourceMgr::DK_Note,
+                      "'next' match was here");
+      SM.PrintMessage(SMLoc::getFromPointer(Buffer.data()), SourceMgr::DK_Note,
+                      "previous match ended here");
+      SM.PrintMessage(SMLoc::getFromPointer(FirstNewLine), SourceMgr::DK_Note,
+                      "non-matching line after previous match is here");
+    }
     return true;
   }
 
   return false;
 }
 
-bool FileCheckString::CheckSame(const SourceMgr &SM, StringRef Buffer) const {
+bool FileCheckString::CheckSame(const SourceMgr &SM, StringRef Buffer,
+                                bool PrintDiags) const {
   if (Pat.getCheckTy() != Check::CheckSame)
     return false;
 
@@ -2358,13 +2338,15 @@ bool FileCheckString::CheckSame(const SourceMgr &SM, StringRef Buffer) const {
   unsigned NumNewLines = CountNumNewlinesBetween(Buffer, FirstNewLine);
 
   if (NumNewLines != 0) {
-    SM.PrintMessage(Loc, SourceMgr::DK_Error,
-                    Prefix +
-                        "-SAME: is not on the same line as the previous match");
-    SM.PrintMessage(SMLoc::getFromPointer(Buffer.end()), SourceMgr::DK_Note,
-                    "'next' match was here");
-    SM.PrintMessage(SMLoc::getFromPointer(Buffer.data()), SourceMgr::DK_Note,
-                    "previous match ended here");
+    if (PrintDiags) {
+      SM.PrintMessage(
+          Loc, SourceMgr::DK_Error,
+          Prefix + "-SAME: is not on the same line as the previous match");
+      SM.PrintMessage(SMLoc::getFromPointer(Buffer.end()), SourceMgr::DK_Note,
+                      "'next' match was here");
+      SM.PrintMessage(SMLoc::getFromPointer(Buffer.data()), SourceMgr::DK_Note,
+                      "previous match ended here");
+    }
     return true;
   }
 
@@ -2482,9 +2464,6 @@ FileCheckString::CheckDag(const SourceMgr &SM, StringRef Buffer,
         break;
       }
       if (Req.VerboseVerbose) {
-        // Due to their verbosity, we don't print verbose diagnostics here if
-        // we're gathering them for a different rendering, but we always print
-        // other diagnostics.
         if (Diags) {
           Diags->adjustPrevMatchFoundDiag(MatchFoundDiag::Discarded);
         } else {

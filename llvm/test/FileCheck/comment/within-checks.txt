@@ -3,6 +3,8 @@
 
 RUN: echo 'foo'                 > %t.in
 RUN: echo 'CHECK: foo COM: bar' > %t.chk
-RUN: %ProtectFileCheckOutput not FileCheck %t.chk < %t.in 2>&1 | FileCheck %s
+RUN: %ProtectFileCheckOutput \
+RUN: not FileCheck -dump-input=never %t.chk < %t.in 2>&1 | \
+RUN:   FileCheck %s
 
 CHECK: .chk:1:8: error: CHECK: expected string not found in input

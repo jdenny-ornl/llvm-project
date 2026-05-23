@@ -7,10 +7,22 @@
 // RUN: echo " aaaaaaaaaa" >> %t.in
 // RUN: echo " aaaaaaaah!" >> %t.chk
 
-// RUN: %ProtectFileCheckOutput \
-// RUN: not FileCheck --color=0 -input-file %t.in %t.chk 2>&1 | \
-// RUN:   FileCheck --check-prefix=ERROR --implicit-check-not={{error}}: %s
+// DEFINE: %{case} =
+// DEFINE: %{run} = \
+// DEFINE:   %ProtectFileCheckOutput \
+// DEFINE:   not FileCheck -dump-input=%{case} --color=0 -input-file %t.in \
+// DEFINE:                 %t.chk 2>&1 | \
+// DEFINE:     FileCheck --check-prefix=DMP-%{case} \
+// DEFINE:               --implicit-check-not={{error}}: %s
 
-ERROR: {{error}}: CHECK: expected string not found in input
-ERROR: {{error}}: no match found
-ERROR-NOT: {{note}}: possible intended match here
+// REDEFINE: %{case} = never
+// RUN: %{run}
+
+// REDEFINE: %{case} = fail
+// RUN: %{run}
+
+DMP-never: {{error}}: CHECK: expected string not found in input
+DMP-never-NOT: {{note}}: possible intended match here
+
+DMP-fail: {{error}}: no match found
+DMP-fail-NOT: {{note}}: possible intended match here

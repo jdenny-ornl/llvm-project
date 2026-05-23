@@ -281,8 +281,10 @@ USE DEF FMT EXPL MATCH  // CHECK-LABEL: USE DEF FMT EXPL MATCH
 ; Numeric expressions in default matching format and explicit matching rule using
 ; variable defined on other lines with match failure.
 RUN: %ProtectFileCheckOutput \
-RUN: not FileCheck --check-prefix NUMEXPR-CONSTRAINT-NOMATCH --input-file %s %s 2>&1 \
-RUN:   | FileCheck --check-prefix NUMEXPR-CONSTRAINT-NOMATCH-MSG --strict-whitespace %s
+RUN: not FileCheck -dump-input=never --check-prefix NUMEXPR-CONSTRAINT-NOMATCH \
+RUN:               --input-file %s %s 2>&1 | \
+RUN:   FileCheck --check-prefix NUMEXPR-CONSTRAINT-NOMATCH-MSG \
+RUN:             --strict-whitespace %s
 
 USE DEF FMT EXPL NO MATCH
 UNSI=11
@@ -393,8 +395,9 @@ PAREN-OP-MSG-NEXT: {{^}}                                   ^{{$}}
 
 ; Numeric expression using undefined variables.
 RUN: %ProtectFileCheckOutput \
-RUN: not FileCheck --check-prefix UNDEF-USE --input-file %s %s 2>&1 \
-RUN:   | FileCheck --strict-whitespace --check-prefix UNDEF-USE-MSG %s
+RUN: not FileCheck -dump-input=never --check-prefix UNDEF-USE --input-file %s \
+RUN:               %s 2>&1 | \
+RUN:   FileCheck --strict-whitespace --check-prefix UNDEF-USE-MSG %s
 
 UNDEF VAR USE
 UNDEFVAR: 11
@@ -409,8 +412,9 @@ UNDEF-USE-MSG-NEXT:              {{^}}                                       ^{{
 
 ; Numeric expression in negative directive using undefined variables.
 RUN: %ProtectFileCheckOutput \
-RUN: not FileCheck --check-prefix UNDEF-USE2 --input-file %s %s 2>&1 \
-RUN:   | FileCheck --strict-whitespace --check-prefix UNDEF-USE-MSG2 %s
+RUN: not FileCheck -dump-input=never --check-prefix UNDEF-USE2 --input-file %s \
+RUN:               %s 2>&1 | \
+RUN:   FileCheck --strict-whitespace --check-prefix UNDEF-USE-MSG2 %s
 
 CHECK NOT UNDEF VAR USE
 END MARKER
@@ -498,8 +502,9 @@ BIGVAL-NEXT: NUMVAR: [[#NUMVAR:]]
 ; Verify that when a variable is set to an expression the expression is still
 ; checked.
 RUN: %ProtectFileCheckOutput \
-RUN: not FileCheck --check-prefix DEF-EXPR-FAIL --input-file %s %s 2>&1 \
-RUN:   | FileCheck --strict-whitespace --check-prefix DEF-EXPR-FAIL-MSG %s
+RUN: not FileCheck -dump-input=never --check-prefix DEF-EXPR-FAIL \
+RUN:               --input-file %s %s 2>&1 | \
+RUN:   FileCheck --strict-whitespace --check-prefix DEF-EXPR-FAIL-MSG %s
 
 DEF EXPR WRONG MATCH
 20
